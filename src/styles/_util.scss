@@ -1,0 +1,18 @@
+@use "sass:map";
+@use "./config" as *;
+
+$colors: (
+  "background": var(--color-background),
+  "primary": var(--color-primary),
+  "highlight": var(--color-highlight),
+  "secondary": var(--color-secondary),
+  "accent": var(--color-accent),
+);
+
+@function px-as-rem($_num-pixels) {
+  @return #{calc($_num-pixels / 16)}rem;
+}
+
+@function color($_type) {
+  @return #{map.get($colors, $_type)};
+}

@@ -1,8 +1,14 @@
 import "./App.scss";
-import { Editor } from "./pages/Editor/Editor";
+import { Header } from "./components/header/Header";
+import { Workspace } from "./pages/workspace/Workspace";
 
 import type { Component } from "solid-js";
 
 export const App: Component = () => {
-  return <Editor />;
+  return (
+    <>
+      <Header />
+      <Workspace />
+    </>
+  );
 };

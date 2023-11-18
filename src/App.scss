@@ -1,3 +1,13 @@
+@use "./styles/util" as *;
 @use "./styles/reset";
 @use "./styles/fonts";
 @use "./styles/animate";
+
+body {
+  font-family: Montserrat;
+}
+
+#root {
+  background-color: #{color("background")};
+  color: #{color("primary")};
+}
