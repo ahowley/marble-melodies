@@ -7,7 +7,7 @@
   "trailingComma": "all",
   "bracketSpacing": true,
   "bracketSameLine": false,
-  "arrowParens": "avoid",
+  "arrowParens": "always",
   "requirePragma": false,
   "insertPragma": false,
   "proseWrap": "always",
