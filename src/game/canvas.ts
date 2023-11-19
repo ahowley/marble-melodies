@@ -39,6 +39,7 @@ class Marble extends Konva.Circle {
         y: 6,
       },
       draggable: true,
+      dragDistance: 4,
       name: "marble",
       ...otherOptions,
     });
@@ -94,6 +95,7 @@ class TrackBlock extends Konva.Rect {
         y: 6,
       },
       draggable: true,
+      dragDistance: 4,
       name: "track-block",
       ...otherOptions,
     });
@@ -184,8 +186,9 @@ class NoteBlock extends Konva.Rect {
         x: 3,
         y: 6,
       },
-      name: "note-block",
       draggable: true,
+      dragDistance: 4,
+      name: "note-block",
       ...otherOptions,
     });
     this.workspace = workspace;
@@ -343,7 +346,7 @@ export class WorkspaceEditor {
     this.stage.on("click tap", (event) => {
       this.stage.draggable(true);
       if (this.selection.visible()) return this.transformer.nodes([]);
-      if (event.target === this.stage) return this.transformer.nodes([]);
+      if (event.target === this.stage || event.target.parent !== this.interactLayer) return this.transformer.nodes([]);
 
       this.selectionTap(event);
     });
