@@ -342,7 +342,7 @@ export class WorkspaceEditor {
 
     this.stage.on("click tap", (event) => {
       this.stage.draggable(true);
-      if (this.selection.visible()) return;
+      if (this.selection.visible()) return this.transformer.nodes([]);
       if (event.target === this.stage) return this.transformer.nodes([]);
 
       this.selectionTap(event);
