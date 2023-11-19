@@ -1,15 +1,4 @@
-import {
-  type Component,
-  type ParentComponent,
-  type Signal,
-  type ContextProviderComponent,
-  onMount,
-  onCleanup,
-  children,
-  createSignal,
-  createContext,
-  useContext,
-} from "solid-js";
+import { type Component, onMount, onCleanup } from "solid-js";
 import { WorkspaceEditor } from "../../game/canvas";
 import "./Editor.scss";
 
@@ -28,5 +17,5 @@ export const Editor: Component = () => {
     });
   });
 
-  return <div class="konva-container" ref={container!} />;
+  return <div class="konva-container" ref={container!} onContextMenu={(event) => event.preventDefault()} />;
 };
