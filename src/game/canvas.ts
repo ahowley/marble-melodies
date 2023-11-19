@@ -3,11 +3,13 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { CircleConfig } from "konva/lib/shapes/Circle";
 import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
+import { SerializedBody, degToRad, radToDeg } from "./physics";
+
+let ID = 1;
 
 class Marble extends Konva.Circle {
   workspace: WorkspaceEditor;
-  previousScaleX: number;
-  previousScaleY: number;
+  physicsId?: number;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -46,18 +48,22 @@ class Marble extends Konva.Circle {
     this.workspace = workspace;
     this.workspace.addBody(this);
 
-    this.previousScaleX = this.scaleX();
-    this.previousScaleY = this.scaleY();
     this.on("transform", (event) => {
       this.skewX(0);
       this.skewY(0);
-      if (this.previousScaleX !== event.target.scaleX()) {
-        this.scaleY(this.scaleX());
-      } else if (this.previousScaleY !== event.target.scaleY()) {
-        this.scaleX(this.scaleY());
+      if (Math.round(this.scaleX() * 1000) !== 1000) {
+        this.radius(this.radius() * this.scaleX());
+        this.scaleX(1);
+      } else if (Math.round(this.scaleY() * 1000) !== 1000) {
+        this.radius(this.radius() * this.scaleY());
+        this.scaleY(1);
       }
-      this.previousScaleX = this.scaleX();
-      this.previousScaleY = this.scaleY();
+      this.fillRadialGradientStartPoint({
+        x: -this.radius() / 2,
+        y: -this.radius() / 2,
+      });
+      this.fillRadialGradientStartRadius(this.radius() / 4);
+      this.fillRadialGradientEndRadius(this.radius() * 1.5);
     });
   }
 }
@@ -67,6 +73,7 @@ class TrackBlock extends Konva.Rect {
   static yOffset = -5;
   workspace: WorkspaceEditor;
   backTrack: Konva.Rect;
+  physicsId?: number;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -151,6 +158,7 @@ class NoteBlock extends Konva.Rect {
   static xOffset = 3;
   static yOffset = 6;
   workspace: WorkspaceEditor;
+  physicsId?: number;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -199,6 +207,16 @@ class NoteBlock extends Konva.Rect {
       this.scaleX(1);
       this.height(this.height() * this.scaleY());
       this.scaleY(1);
+      this.skewX(0);
+      this.skewY(0);
+      this.fillLinearGradientStartPoint({
+        x: this.width() / 2,
+        y: 0,
+      });
+      this.fillLinearGradientEndPoint({
+        x: this.width() / 2,
+        y: this.height() / 2,
+      });
     });
   }
 }
@@ -364,8 +382,8 @@ export class WorkspaceEditor {
   }
 
   addTestShapes() {
-    new Marble(this, this.stage.width() / 2, this.stage.height() / 2, 1, 20, "white", "blue");
-    new TrackBlock(this, 200, 200, 1, 200, 10, "lightgray", "gray");
-    new NoteBlock(this, 100, 400, 1, 100, 50, "blue", "darkblue");
+    new Marble(this, this.stage.width() / 2, this.stage.height() / 2, radToDeg(1), 20, "white", "blue");
+    new TrackBlock(this, 200, 200, radToDeg(1), 200, 10, "lightgray", "gray");
+    new NoteBlock(this, 100, 400, radToDeg(1), 100, 50, "blue", "darkblue");
   }
 }
