@@ -6,6 +6,8 @@ import { GetSet } from "konva/lib/types";
 
 class Marble extends Konva.Circle {
   workspace: WorkspaceEditor;
+  previousScaleX: number;
+  previousScaleY: number;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -43,16 +45,25 @@ class Marble extends Konva.Circle {
     this.workspace = workspace;
     this.workspace.addBody(this);
 
-    this.on("transform", () => {
-      this.scaleY(this.scaleX());
+    this.previousScaleX = this.scaleX();
+    this.previousScaleY = this.scaleY();
+    this.on("transform", (event) => {
       this.skewX(0);
+      this.skewY(0);
+      if (this.previousScaleX !== event.target.scaleX()) {
+        this.scaleY(this.scaleX());
+      } else if (this.previousScaleY !== event.target.scaleY()) {
+        this.scaleX(this.scaleY());
+      }
+      this.previousScaleX = this.scaleX();
+      this.previousScaleY = this.scaleY();
     });
   }
 }
 
 class TrackBlock extends Konva.Rect {
-  static xOffset = 3;
-  static yOffset = 6;
+  static xOffset = 5;
+  static yOffset = -5;
   workspace: WorkspaceEditor;
   backTrack: Konva.Rect;
 
@@ -105,14 +116,21 @@ class TrackBlock extends Konva.Rect {
     this.workspace = workspace;
     this.workspace.backgroundLayer.add(this.backTrack);
     this.workspace.addBody(this);
+
     this.on("transform", () => {
       this.backTrack.x(this.x() + TrackBlock.xOffset * this.scaleX());
       this.backTrack.y(this.y() + TrackBlock.yOffset * this.scaleY());
       this.backTrack.rotation(this.rotation());
-      this.backTrack.scaleX(this.scaleX());
-      this.backTrack.scaleY(this.scaleY());
-      this.backTrack.skewX(this.skewX());
-      this.backTrack.skewY(this.skewY());
+      this.width(this.width() * this.scaleX());
+      this.scaleX(1);
+      this.height(this.height() * this.scaleY());
+      this.scaleY(1);
+      this.cornerRadius(Math.min(this.width(), this.height()) / 2);
+      this.skewX(0);
+      this.skewY(0);
+      this.backTrack.width(this.width());
+      this.backTrack.height(this.height());
+      this.backTrack.cornerRadius(this.cornerRadius());
     });
     this.x = ((newX?: number) => {
       newX && super.x(newX);
@@ -172,6 +190,13 @@ class NoteBlock extends Konva.Rect {
     });
     this.workspace = workspace;
     this.workspace.addBody(this);
+
+    this.on("transform", () => {
+      this.width(this.width() * this.scaleX());
+      this.scaleX(1);
+      this.height(this.height() * this.scaleY());
+      this.scaleY(1);
+    });
   }
 }
 
@@ -206,7 +231,7 @@ export class WorkspaceEditor {
     this.backgroundLayer = new Konva.Layer();
     this.interactLayer = new Konva.Layer();
     this.transformer = new Konva.Transformer({
-      enabledAnchors: ["middle-left", "middle-right"],
+      enabledAnchors: ["middle-left", "middle-right", "top-center", "bottom-center"],
       flipEnabled: false,
       centeredScaling: true,
     });
