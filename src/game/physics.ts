@@ -1,4 +1,4 @@
-import { Engine, Body, Bodies, Composite, Vector } from "matter-js";
+import { Engine, Body, Bodies, Composite } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA } from "./config";
 
 export type SerializedBody = {
@@ -11,22 +11,19 @@ export type SerializedBody = {
   radius?: number;
   width?: number;
   height?: number;
-  gradientStart?: string;
-  gradientEnd?: string;
+  gradientStart?: string | number;
+  gradientEnd?: string | number;
   frontColor?: string;
   backColor?: string;
   isStatic?: boolean;
 };
 export type Frame = { id: number; bodies: SerializedBody[]; calcDuration: number; timeSpentRendering: number };
-type WorkerAction = "initialize" | "add bodies" | "update bodies" | "remove bodies" | "update" | "destroy";
+export type WorkerAction = "initialize" | "remove bodies" | "update" | "destroy";
 type PhysicsMessageData = {
   action: WorkerAction;
-  bodies: SerializedBody[];
+  bodies?: SerializedBody[];
 };
 type PhysicsMessageEvent = Omit<MessageEvent, "data"> & { data: PhysicsMessageData };
-
-export const degToRad = (degrees: number) => (degrees * Math.PI) / 180;
-export const radToDeg = (radians: number) => (radians * 180) / Math.PI;
 
 let frameId = 0;
 
@@ -133,7 +130,6 @@ const initializeBody = (body: SerializedBody) => {
       { x: body.x + body.width, y: body.y },
     ];
   }
-
   return getSerializedBody(physicsBody);
 };
 
@@ -148,3 +144,29 @@ const removeBody = (physicsId: number) => {
   physicsToCanvasMap.delete(physicsId);
   bodiesMap.delete(canvasId);
 };
+
+const initialize = (bodies: SerializedBody[]) => {
+  const initialized: SerializedBody[] = [];
+
+  for (let i = 0; i < bodies.length; i++) {
+    const serializedBody = initializeBody(bodies[i]);
+    serializedBody && initialized.push(serializedBody);
+  }
+
+  return initialized;
+};
+
+addEventListener("message", (event: PhysicsMessageEvent) => {
+  const { data } = event;
+
+  if (data.action === "initialize") {
+    if (!data.bodies) {
+      throw new TypeError("A message was received to initialize the physics engine, but no bodies were passed.");
+    }
+
+    return postMessage({
+      action: "initialize",
+      bodies: initialize(data.bodies),
+    });
+  }
+});

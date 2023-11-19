@@ -3,13 +3,21 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { CircleConfig } from "konva/lib/shapes/Circle";
 import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
-import { SerializedBody, degToRad, radToDeg } from "./physics";
+import { Frame, SerializedBody, WorkerAction } from "./physics";
+import { radToDeg, degToRad } from "./common";
 
-let ID = 1;
+type Body = Marble | TrackBlock | NoteBlock;
+type CanvasMessageData = {
+  action: WorkerAction;
+  bodies?: SerializedBody[];
+  frames?: Frame[];
+};
+type CanvasMessageEvent = Omit<MessageEvent, "data"> & { data: CanvasMessageData };
 
 class Marble extends Konva.Circle {
   workspace: WorkspaceEditor;
   physicsId?: number;
+  initialState: SerializedBody;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -17,8 +25,8 @@ class Marble extends Konva.Circle {
     y: number,
     rotation: number,
     radius: number,
-    gradientStart: string,
-    gradientEnd: string,
+    gradientStart: string | number,
+    gradientEnd: string | number,
     otherOptions: CircleConfig = {},
   ) {
     super({
@@ -45,10 +53,16 @@ class Marble extends Konva.Circle {
       name: "marble",
       ...otherOptions,
     });
+    this.id(`${this._id}`);
     this.workspace = workspace;
     this.workspace.addBody(this);
+    this.initialState = this.serialize();
 
-    this.on("transform", (event) => {
+    this.on("dragend", () => {
+      this.initialState = this.serialize();
+      this.workspace.initialize();
+    });
+    this.on("transform", () => {
       this.skewX(0);
       this.skewY(0);
       if (Math.round(this.scaleX() * 1000) !== 1000) {
@@ -64,7 +78,23 @@ class Marble extends Konva.Circle {
       });
       this.fillRadialGradientStartRadius(this.radius() / 4);
       this.fillRadialGradientEndRadius(this.radius() * 1.5);
+      this.initialState = this.serialize();
+      this.workspace.initialize();
     });
+  }
+
+  serialize(): SerializedBody {
+    return {
+      canvasId: this.id(),
+      type: "marble",
+      x: this.x(),
+      y: this.y(),
+      rotation: degToRad(this.rotation()),
+      radius: this.radius(),
+      gradientStart: this.fillRadialGradientColorStops()[1],
+      gradientEnd: this.fillRadialGradientColorStops()[3],
+      isStatic: false,
+    };
   }
 }
 
@@ -74,6 +104,7 @@ class TrackBlock extends Konva.Rect {
   workspace: WorkspaceEditor;
   backTrack: Konva.Rect;
   physicsId?: number;
+  initialState: SerializedBody;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -122,10 +153,16 @@ class TrackBlock extends Konva.Rect {
       },
       name: "backtrack-block",
     });
+    this.id(`${this._id}`);
     this.workspace = workspace;
     this.workspace.backgroundLayer.add(this.backTrack);
     this.workspace.addBody(this);
+    this.initialState = this.serialize();
 
+    this.on("dragend", () => {
+      this.initialState = this.serialize();
+      this.workspace.initialize();
+    });
     this.on("transform", () => {
       this.backTrack.x(this.x() + TrackBlock.xOffset * this.scaleX());
       this.backTrack.y(this.y() + TrackBlock.yOffset * this.scaleY());
@@ -140,6 +177,8 @@ class TrackBlock extends Konva.Rect {
       this.backTrack.width(this.width());
       this.backTrack.height(this.height());
       this.backTrack.cornerRadius(this.cornerRadius());
+      this.initialState = this.serialize();
+      this.workspace.initialize();
     });
     this.x = ((newX?: number) => {
       newX && super.x(newX);
@@ -152,6 +191,21 @@ class TrackBlock extends Konva.Rect {
       return super.y();
     }) as GetSet<number, this>;
   }
+
+  serialize(): SerializedBody {
+    return {
+      canvasId: this.id(),
+      type: "track-block",
+      x: this.x(),
+      y: this.y(),
+      width: this.width(),
+      height: this.height(),
+      rotation: degToRad(this.rotation()),
+      frontColor: this.fill(),
+      backColor: this.backTrack.fill(),
+      isStatic: true,
+    };
+  }
 }
 
 class NoteBlock extends Konva.Rect {
@@ -159,6 +213,7 @@ class NoteBlock extends Konva.Rect {
   static yOffset = 6;
   workspace: WorkspaceEditor;
   physicsId?: number;
+  initialState: SerializedBody;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -167,8 +222,8 @@ class NoteBlock extends Konva.Rect {
     rotation: number,
     width: number,
     height: number,
-    gradientStart: string,
-    gradientEnd: string,
+    gradientStart: string | number,
+    gradientEnd: string | number,
     otherOptions: RectConfig = {},
   ) {
     super({
@@ -199,9 +254,15 @@ class NoteBlock extends Konva.Rect {
       name: "note-block",
       ...otherOptions,
     });
+    this.id(`${this._id}`);
     this.workspace = workspace;
     this.workspace.addBody(this);
+    this.initialState = this.serialize();
 
+    this.on("dragend", () => {
+      this.initialState = this.serialize();
+      this.workspace.initialize();
+    });
     this.on("transform", () => {
       this.width(this.width() * this.scaleX());
       this.scaleX(1);
@@ -217,12 +278,30 @@ class NoteBlock extends Konva.Rect {
         x: this.width() / 2,
         y: this.height() / 2,
       });
+      this.initialState = this.serialize();
+      this.workspace.initialize();
     });
+  }
+
+  serialize(): SerializedBody {
+    return {
+      canvasId: this.id(),
+      type: "note-block",
+      x: this.x(),
+      y: this.y(),
+      width: this.width(),
+      height: this.height(),
+      rotation: degToRad(this.rotation()),
+      gradientStart: this.fillLinearGradientColorStops()[1],
+      gradientEnd: this.fillLinearGradientColorStops()[3],
+      isStatic: true,
+    };
   }
 }
 
 export class WorkspaceEditor {
   container: HTMLDivElement;
+  initialState: (SerializedBody | Omit<SerializedBody, "canvasId">)[];
   stage: Konva.Stage;
   stageOffset: { offsetX: number; offsetY: number };
   backgroundLayer: Konva.Layer;
@@ -235,10 +314,13 @@ export class WorkspaceEditor {
     y1: number;
     y2: number;
   };
-  bodies: Konva.Node[];
+  bodies: Body[];
+  physics: Worker;
 
-  constructor(container: HTMLDivElement) {
+  constructor(container: HTMLDivElement, initialState: Omit<SerializedBody, "canvasId">[] = []) {
     this.container = container;
+    this.physics = new Worker("./src/game/physics.ts", { type: "module" });
+    this.bodies = [];
     this.stage = new Konva.Stage({
       container: this.container,
       draggable: true,
@@ -248,6 +330,8 @@ export class WorkspaceEditor {
       offsetY: 0,
     };
     this.sizeToContainer();
+    this.initialState = initialState;
+    this.initialize(initialState);
 
     this.backgroundLayer = new Konva.Layer();
     this.interactLayer = new Konva.Layer();
@@ -272,7 +356,7 @@ export class WorkspaceEditor {
     this.interactLayer.add(this.selection);
     this.listenForPointerEvents();
 
-    this.bodies = [];
+    this.physics.addEventListener("message", this.handlePhysicsResponse);
     this.addTestShapes();
   }
 
@@ -295,10 +379,9 @@ export class WorkspaceEditor {
       y1: pointerPosition.y,
       y2: pointerPosition.y,
     };
-
-    this.selection.visible(true);
     this.selection.width(0);
     this.selection.height(0);
+    this.selection.visible(true);
   }
 
   selectionDrag(event: KonvaEventObject<MouseEvent>) {
@@ -320,7 +403,10 @@ export class WorkspaceEditor {
 
   selectionEnd(event: KonvaEventObject<any>) {
     event.evt.preventDefault();
-    setTimeout(() => this.selection.visible(false));
+    this.selection.visible(false);
+    if (this.selection.width() < 5 || this.selection.height() < 5) {
+      return;
+    }
 
     const box = this.selection.getClientRect();
     const selected = this.bodies.filter((body) => Konva.Util.haveIntersection(box, body.getClientRect()));
@@ -328,15 +414,21 @@ export class WorkspaceEditor {
   }
 
   selectionTap(event: KonvaEventObject<MouseEvent>) {
-    if (!this.bodies.includes(event.target)) return;
+    if (
+      !this.bodies.includes(event.target as Body) ||
+      this.transformer.nodes().includes(event.target) ||
+      event.target === this.stage
+    ) {
+      return;
+    }
     const metaPressed = event.evt.shiftKey || event.evt.ctrlKey || event.evt.metaKey;
     const isSelected = this.transformer.nodes().includes(event.target);
 
-    if (!metaPressed && !isSelected) {
+    if (!metaPressed && !isSelected && !this.transformer.nodes().includes(event.target)) {
       this.transformer.nodes([event.target]);
     } else if (metaPressed && isSelected) {
       this.transformer.nodes(this.transformer.nodes().filter((node) => node !== event.target));
-    } else if (metaPressed && !isSelected) {
+    } else if (metaPressed && !isSelected && !this.transformer.nodes().includes(event.target)) {
       this.transformer.nodes([...this.transformer.nodes(), event.target]);
     }
   }
@@ -362,23 +454,79 @@ export class WorkspaceEditor {
     });
 
     this.stage.on("click tap", (event) => {
-      this.stage.draggable(true);
-      if (this.selection.visible()) return this.transformer.nodes([]);
-      if (event.target === this.stage || event.target.parent !== this.interactLayer) return this.transformer.nodes([]);
+      if (this.selection.visible()) {
+        this.transformer.nodes([]);
+      }
+      if (event.target === this.stage || event.target.parent !== this.interactLayer) {
+        return this.transformer.nodes([]);
+      }
 
       this.selectionTap(event);
     });
   }
 
-  addBody(body: Konva.Shape) {
+  addBody(body: Body) {
     this.bodies.push(body);
     this.interactLayer.add(body);
     this.transformer.moveToTop();
     this.selection.moveToTop();
   }
 
-  addBodies(bodies: Konva.Shape[]) {
+  addBodies(bodies: Body[]) {
     bodies.forEach((body) => this.addBody(body));
+  }
+
+  initialize(bodies?: Omit<SerializedBody, "canvasId">[]) {
+    if (bodies) {
+      for (let i = 0; i < bodies.length; i++) {
+        const body = bodies[i];
+        switch (body.type) {
+          case "marble":
+            if (body.radius && body.gradientStart && body.gradientEnd)
+              this.addBody(
+                new Marble(this, body.x, body.y, body.rotation, body.radius, body.gradientStart, body.gradientEnd),
+              );
+          case "note-block":
+            if (body.width && body.height && body.frontColor && body.backColor)
+              this.addBody(
+                new TrackBlock(
+                  this,
+                  body.x,
+                  body.y,
+                  body.rotation,
+                  body.width,
+                  body.height,
+                  body.frontColor,
+                  body.backColor,
+                ),
+              );
+          case "track-block":
+            if (body.width && body.height && body.gradientStart && body.gradientEnd)
+              this.addBody(
+                new NoteBlock(
+                  this,
+                  body.x,
+                  body.y,
+                  body.rotation,
+                  body.width,
+                  body.height,
+                  body.gradientStart,
+                  body.gradientEnd,
+                ),
+              );
+        }
+      }
+    }
+    this.initialState = this.bodies.map((body) => body.initialState);
+    this.physics.postMessage({
+      action: "initialize",
+      bodies: this.initialState,
+    });
+  }
+
+  handlePhysicsResponse(event: CanvasMessageEvent) {
+    console.log(event);
+    event.data.action && console.log(event);
   }
 
   addTestShapes() {
