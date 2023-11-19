@@ -1,12 +1,13 @@
 import { type Component, onMount, onCleanup } from "solid-js";
 import { WorkspaceEditor } from "../../game/canvas";
+import { SerializedBody } from "../../game/physics";
 import "./Editor.scss";
 
-export const Editor: Component = () => {
+export const Editor: Component<{ initialState: Omit<SerializedBody, "canvasId">[] }> = (props) => {
   let container: HTMLDivElement;
 
   onMount(() => {
-    const editor = new WorkspaceEditor(container);
+    const editor = new WorkspaceEditor(container, props.initialState);
     const resizeListener = () => {
       editor.sizeToContainer();
     };

@@ -32,7 +32,7 @@ class Marble extends Konva.Circle {
     super({
       x,
       y,
-      rotation,
+      rotation: radToDeg(rotation),
       radius,
       fillRadialGradientStartPoint: {
         x: -radius / 2,
@@ -120,7 +120,7 @@ class TrackBlock extends Konva.Rect {
     super({
       x,
       y,
-      rotation,
+      rotation: radToDeg(rotation),
       width,
       height,
       fill: frontColor,
@@ -140,7 +140,7 @@ class TrackBlock extends Konva.Rect {
     this.backTrack = new Konva.Rect({
       x: x + TrackBlock.xOffset,
       y: y + TrackBlock.yOffset,
-      rotation,
+      rotation: radToDeg(rotation),
       width,
       height,
       fill: backColor,
@@ -229,7 +229,7 @@ class NoteBlock extends Konva.Rect {
     super({
       x,
       y,
-      rotation,
+      rotation: radToDeg(rotation),
       width,
       height,
       fillLinearGradientColorStops: [0, gradientStart, 1, gradientEnd],
@@ -330,8 +330,6 @@ export class WorkspaceEditor {
       offsetY: 0,
     };
     this.sizeToContainer();
-    this.initialState = initialState;
-    this.initialize(initialState);
 
     this.backgroundLayer = new Konva.Layer();
     this.interactLayer = new Konva.Layer();
@@ -356,8 +354,10 @@ export class WorkspaceEditor {
     this.interactLayer.add(this.selection);
     this.listenForPointerEvents();
 
+    this.initialState = initialState;
+    this.initialize(initialState);
+
     this.physics.addEventListener("message", this.handlePhysicsResponse);
-    this.addTestShapes();
   }
 
   sizeToContainer() {
@@ -465,11 +465,15 @@ export class WorkspaceEditor {
     });
   }
 
+  organizeInteractLayer() {
+    this.transformer.moveToTop();
+    this.selection.moveToTop();
+  }
+
   addBody(body: Body) {
     this.bodies.push(body);
     this.interactLayer.add(body);
-    this.transformer.moveToTop();
-    this.selection.moveToTop();
+    this.organizeInteractLayer();
   }
 
   addBodies(bodies: Body[]) {
@@ -483,37 +487,34 @@ export class WorkspaceEditor {
         switch (body.type) {
           case "marble":
             if (body.radius && body.gradientStart && body.gradientEnd)
-              this.addBody(
-                new Marble(this, body.x, body.y, body.rotation, body.radius, body.gradientStart, body.gradientEnd),
-              );
-          case "note-block":
-            if (body.width && body.height && body.frontColor && body.backColor)
-              this.addBody(
-                new TrackBlock(
-                  this,
-                  body.x,
-                  body.y,
-                  body.rotation,
-                  body.width,
-                  body.height,
-                  body.frontColor,
-                  body.backColor,
-                ),
-              );
+              new Marble(this, body.x, body.y, body.rotation, body.radius, body.gradientStart, body.gradientEnd);
+            break;
           case "track-block":
-            if (body.width && body.height && body.gradientStart && body.gradientEnd)
-              this.addBody(
-                new NoteBlock(
-                  this,
-                  body.x,
-                  body.y,
-                  body.rotation,
-                  body.width,
-                  body.height,
-                  body.gradientStart,
-                  body.gradientEnd,
-                ),
+            if (body.width && body.height && body.frontColor && body.backColor)
+              new TrackBlock(
+                this,
+                body.x,
+                body.y,
+                body.rotation,
+                body.width,
+                body.height,
+                body.frontColor,
+                body.backColor,
               );
+            break;
+          case "note-block":
+            if (body.width && body.height && body.gradientStart && body.gradientEnd)
+              new NoteBlock(
+                this,
+                body.x,
+                body.y,
+                body.rotation,
+                body.width,
+                body.height,
+                body.gradientStart,
+                body.gradientEnd,
+              );
+            break;
         }
       }
     }
@@ -525,13 +526,6 @@ export class WorkspaceEditor {
   }
 
   handlePhysicsResponse(event: CanvasMessageEvent) {
-    console.log(event);
-    event.data.action && console.log(event);
-  }
-
-  addTestShapes() {
-    new Marble(this, this.stage.width() / 2, this.stage.height() / 2, radToDeg(1), 20, "white", "blue");
-    new TrackBlock(this, 200, 200, radToDeg(1), 200, 10, "lightgray", "gray");
-    new NoteBlock(this, 100, 400, radToDeg(1), 100, 50, "blue", "darkblue");
+    console.log(event.data);
   }
 }
