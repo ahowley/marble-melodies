@@ -337,11 +337,16 @@ export class WorkspaceEditor {
   physics: Worker;
   physicsBusy: boolean;
   playing: boolean;
+  stopCallback?: () => void;
   previousDrawTime: number;
   disableTransformer: boolean;
   needsPreviewUpdate: boolean;
 
-  constructor(container: HTMLDivElement, initialState: Omit<SerializedBody, "canvasId">[] = []) {
+  constructor(
+    container: HTMLDivElement,
+    stopCallback: () => void,
+    initialState: Omit<SerializedBody, "canvasId">[] = [],
+  ) {
     this.container = container;
     this.physics = new Worker("./src/game/physics.ts", { type: "module" });
     this.physicsBusy = false;
@@ -360,6 +365,7 @@ export class WorkspaceEditor {
     };
     this.sizeToContainer();
     this.playing = false;
+    this.stopCallback = stopCallback;
     this.disableTransformer = false;
     this.needsPreviewUpdate = false;
     this.previousDrawTime = 0;
@@ -695,12 +701,18 @@ export class WorkspaceEditor {
     }
 
     let nextFrame = this.unrenderedFrames[0];
+    if (nextFrame?.lastFrame) {
+      this.stop(this);
+    }
     if (!nextFrame) return;
 
     let remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
     while (delta > remainingRenderTime && this.unrenderedFrames[1]) {
       delta -= remainingRenderTime;
       nextFrame = this.unrenderedFrames[1];
+      if (nextFrame?.lastFrame) {
+        this.stop(this);
+      }
       remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
       this.unrenderedFrames.shift();
     }
@@ -716,10 +728,10 @@ export class WorkspaceEditor {
       body.x(lerp(body.x(), serializedBody.x, deltaRatio));
       body.y(lerp(body.y(), serializedBody.y, deltaRatio));
       body.rotation(lerp(body.rotation(), radToDeg(serializedBody.rotation), deltaRatio));
-
-      nextFrame.timeSpentRendering += delta;
-      if (nextFrame.timeSpentRendering > DELTA) this.unrenderedFrames.shift();
     }
+
+    nextFrame.timeSpentRendering += delta;
+    if (nextFrame.timeSpentRendering > DELTA) this.unrenderedFrames.shift();
   }
 
   draw(self: WorkspaceEditor, time: number, firstCall = false) {
@@ -745,10 +757,13 @@ export class WorkspaceEditor {
   }
 
   stop(self: WorkspaceEditor) {
-    this.playing = false;
-    this.disableTransformer = false;
+    self.playing = false;
+    self.disableTransformer = false;
     self.initialize(self.initialState, true);
     self.recenter();
+    if (self.stopCallback) {
+      self.stopCallback();
+    }
   }
 
   handlePhysicsResponse(self: WorkspaceEditor, event: CanvasMessageEvent) {
@@ -763,7 +778,7 @@ export class WorkspaceEditor {
     }
 
     if (event.data.action === "update") {
-      self.unrenderedFrames.push(...(event.data.frames || []));
+      event.data.frames && self.unrenderedFrames.push(...event.data.frames);
       self.physicsBusy = false;
     }
   }

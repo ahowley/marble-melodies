@@ -17,7 +17,13 @@ export type SerializedBody = {
   backColor?: string;
   isStatic?: boolean;
 };
-export type Frame = { id: number; bodies: SerializedBody[]; calcDuration: number; timeSpentRendering: number };
+export type Frame = {
+  id: number;
+  bodies: SerializedBody[];
+  calcDuration: number;
+  timeSpentRendering: number;
+  lastFrame: boolean;
+};
 export type WorkerAction =
   | "initialize"
   | "preview"
@@ -36,6 +42,7 @@ let frameId = 0;
 let noPreview = false;
 let previewing = false;
 let lastPreviewTime = -10000;
+let hasMovingBodies = true;
 const engine = Engine.create({
   // TODO - configure engine to figure out why collisions look kind of funny
   gravity: {
@@ -96,7 +103,7 @@ const getSerializedBody = (body: Body) => {
   return serializedBody;
 };
 
-const getNextFrame = (): Frame => {
+const getNextFrame = (preview = false): Frame => {
   const startTime = performance.now();
   Engine.update(engine, DELTA);
 
@@ -105,6 +112,7 @@ const getNextFrame = (): Frame => {
     bodies: world.bodies.map((body) => getSerializedBody(body)),
     timeSpentRendering: 0,
     calcDuration: performance.now() - startTime,
+    lastFrame: preview || !hasMovingBodies,
   };
 };
 
@@ -116,7 +124,7 @@ const renderPreview = async () => {
   const previewFrames: Frame[] = [];
   for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE) {
     for (let j = 0; j < FRAME_CACHE_SIZE; j++) {
-      const frame = getNextFrame();
+      const frame = getNextFrame(true);
       if (j === 0) previewFrames.push(frame);
     }
   }
@@ -124,9 +132,19 @@ const renderPreview = async () => {
   previewing = false;
 };
 
-const update = () => {
+const update = (lastFramePassed = false) => {
+  if (lastFramePassed) {
+    for (let i = frames.length; i > 0; i--) {
+      frames.pop();
+    }
+    return;
+  }
   for (let i = 0; i < frames.length; i++) {
     frames[i] = getNextFrame();
+    if (frames[i].lastFrame) {
+      frames.splice(i + 1);
+      return;
+    }
   }
   for (let i = frames.length; i < FRAME_CACHE_SIZE; i++) {
     frames.push(getNextFrame());
@@ -201,7 +219,7 @@ const initializeBody = (body: SerializedBody) => {
 
 const removeBody = (physicsId: number) => {
   const canvasId = physicsToCanvasMap.get(physicsId);
-  if (!canvasId) throw new TypeError(`There is no body in the canvas mapped with a physics ID ${physicsId}.`);
+  if (!canvasId) return;
 
   const physicsBody = bodiesMap.get(canvasId);
   if (!physicsBody) throw new TypeError(`There is no body mapped with an id ${canvasId}.`);
@@ -209,18 +227,19 @@ const removeBody = (physicsId: number) => {
   Composite.remove(world, physicsBody);
   physicsToCanvasMap.delete(physicsId);
   bodiesMap.delete(canvasId);
+  hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
 };
 
 const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
-  createAndAddLowerBoundary(); // TODO: Figure out lower boundary and make it work
 
   for (let i = 0; i < world.bodies.length; i++) {
     const body = world.bodies[i];
     const canvasId = physicsToCanvasMap.get(body.id);
     if (!canvasId) {
       Composite.remove(world, body);
+      hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
       continue;
     }
     if (!canvasIds.includes(canvasId)) {
@@ -228,11 +247,13 @@ const initialize = async (bodies: SerializedBody[]) => {
     }
   }
 
+  createAndAddLowerBoundary();
   for (let i = 0; i < bodies.length; i++) {
     const serializedBody = initializeBody(bodies[i]);
     serializedBody && initialized.push(serializedBody);
   }
 
+  hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
   initialState = initialized;
   postMessage({
     action: "initialize",
@@ -256,10 +277,17 @@ Events.on(engine, "collisionEnd", (event) => {
       const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
       const extraVelocity = Vector.create(0, -5);
       Body.setVelocity(marble, Vector.add(marble.velocity, extraVelocity));
-    } else if (pair.bodyA.label === "boundary") {
+    }
+  }
+});
+
+Events.on(engine, "collisionStart", (event) => {
+  const { pairs } = event;
+
+  for (let i = 0; i < pairs.length; i++) {
+    const pair = pairs[i];
+    if (pair.bodyA.label === "boundary") {
       removeBody(pair.bodyB.id);
-    } else if (pair.bodyB.label === "boundary") {
-      removeBody(pair.bodyA.id);
     }
   }
 });
@@ -297,10 +325,11 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "update") {
-    update();
-    postMessage({
-      action: "update",
-      frames,
-    });
+    update(!hasMovingBodies);
+    frames.length &&
+      postMessage({
+        action: "update",
+        frames,
+      });
   }
 });

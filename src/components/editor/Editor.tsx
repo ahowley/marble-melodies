@@ -24,11 +24,14 @@ export const Editor: Component<EditorProps> = (props) => {
 
   const handleStop = () => {
     editor()?.stop(editor() as WorkspaceEditor);
+  };
+
+  const editorStopCallback = () => {
     setPlaying(false);
   };
 
   onMount(() => {
-    setEditor(new WorkspaceEditor(container, props.initialState));
+    setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
     const resizeListener = () => {
       editor()?.sizeToContainer();
     };
