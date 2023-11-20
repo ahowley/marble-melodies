@@ -1,6 +1,5 @@
 import { Engine, Body, Bodies, Composite, Events, Vector } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT } from "./config";
-import Konva from "konva";
 
 export type SerializedBody = {
   canvasId: string;
@@ -144,6 +143,7 @@ const createAndAddCircle = (circle: SerializedBody) => {
     frictionStatic: 0.25,
     label: "marble",
   });
+
   Composite.add(world, circleBody);
   physicsToCanvasMap.set(circleBody.id, circle.canvasId);
   bodiesMap.set(circle.canvasId, circleBody);
@@ -157,9 +157,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   }
 
   const isTrack = rectangle.type?.includes("track");
-
   const centerPosition = centerPositionFromTopLeft(rectangle);
-
   const rectangleBody = Bodies.rectangle(centerPosition.x, centerPosition.y, rectangle.width, rectangle.height, {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
@@ -167,6 +165,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
     friction: isTrack ? 0.1 : 0.01,
     label: isTrack ? "track-block" : "note-block",
   });
+
   Composite.add(world, rectangleBody);
   physicsToCanvasMap.set(rectangleBody.id, rectangle.canvasId);
   bodiesMap.set(rectangle.canvasId, rectangleBody);
@@ -215,7 +214,7 @@ const removeBody = (physicsId: number) => {
 const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
-  // createAndAddLowerBoundary(); // TODO: Figure out lower boundary and make it work
+  createAndAddLowerBoundary(); // TODO: Figure out lower boundary and make it work
 
   for (let i = 0; i < world.bodies.length; i++) {
     const body = world.bodies[i];
@@ -235,7 +234,6 @@ const initialize = async (bodies: SerializedBody[]) => {
   }
 
   initialState = initialized;
-  console.log(initialState);
   postMessage({
     action: "initialize",
     bodies: initialState,
@@ -279,7 +277,7 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "disable preview") {
-    console.log("[physics] disble preview");
+    console.log("[physics] disable preview");
     if (!data.bodies) {
       throw new TypeError("A message was received to disable the physics engine preview, but no bodies were passed.");
     }
@@ -299,7 +297,6 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "update") {
-    console.log("[physics] update");
     update();
     postMessage({
       action: "update",

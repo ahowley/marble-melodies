@@ -339,6 +339,7 @@ export class WorkspaceEditor {
   playing: boolean;
   previousDrawTime: number;
   disableTransformer: boolean;
+  needsPreviewUpdate: boolean;
 
   constructor(container: HTMLDivElement, initialState: Omit<SerializedBody, "canvasId">[] = []) {
     this.container = container;
@@ -360,6 +361,7 @@ export class WorkspaceEditor {
     this.sizeToContainer();
     this.playing = false;
     this.disableTransformer = false;
+    this.needsPreviewUpdate = false;
     this.previousDrawTime = 0;
 
     this.backgroundLayer = new Konva.Layer({
@@ -495,6 +497,10 @@ export class WorkspaceEditor {
     });
 
     this.stage.on("click tap", (event) => {
+      if (this.needsPreviewUpdate) {
+        this.initialize();
+        this.needsPreviewUpdate = false;
+      }
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (this.selection.visible()) {
         this.transformer.nodes([]);
@@ -657,6 +663,8 @@ export class WorkspaceEditor {
           action: "initialize",
           bodies: this.initialState,
         });
+      } else {
+        this.needsPreviewUpdate = true;
       }
       this.physicsBusy = true;
     }
@@ -703,9 +711,7 @@ export class WorkspaceEditor {
       if (!this.playing) return;
       const serializedBody = nextFrame.bodies[i];
       const body = this.bodiesMap.get(serializedBody.canvasId);
-      if (!body) {
-        throw new ReferenceError(`Body with ID ${serializedBody.canvasId} couldn't be found in bodyData Map.`);
-      }
+      if (!body) continue;
 
       body.x(lerp(body.x(), serializedBody.x, deltaRatio));
       body.y(lerp(body.y(), serializedBody.y, deltaRatio));
