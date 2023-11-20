@@ -5,6 +5,7 @@ import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad } from "./common";
+import { FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
 
 type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
@@ -302,12 +303,16 @@ class NoteBlock extends Konva.Rect {
 export class WorkspaceEditor {
   container: HTMLDivElement;
   initialState: (SerializedBody | Omit<SerializedBody, "canvasId">)[];
+  unrenderedFrames: Frame[];
+  renderedFrames: Frame[];
+  previewFrames: Frame[];
   stage: Konva.Stage;
   stageOffset: { offsetX: number; offsetY: number };
   backgroundLayer: Konva.Layer;
   interactLayer: Konva.Layer;
   transformer: Konva.Transformer;
   selection: Konva.Rect;
+  previewLines: Map<string, Konva.Line>;
   selectionVertices: {
     x1: number;
     x2: number;
@@ -316,11 +321,16 @@ export class WorkspaceEditor {
   };
   bodies: Body[];
   physics: Worker;
+  physicsBusy: boolean;
 
   constructor(container: HTMLDivElement, initialState: Omit<SerializedBody, "canvasId">[] = []) {
     this.container = container;
     this.physics = new Worker("./src/game/physics.ts", { type: "module" });
+    this.physicsBusy = false;
     this.bodies = [];
+    this.unrenderedFrames = [];
+    this.renderedFrames = [];
+    this.previewFrames = [];
     this.stage = new Konva.Stage({
       container: this.container,
       draggable: true,
@@ -331,7 +341,9 @@ export class WorkspaceEditor {
     };
     this.sizeToContainer();
 
-    this.backgroundLayer = new Konva.Layer();
+    this.backgroundLayer = new Konva.Layer({
+      listening: false,
+    });
     this.interactLayer = new Konva.Layer();
     this.transformer = new Konva.Transformer({
       enabledAnchors: ["middle-left", "middle-right", "top-center", "bottom-center"],
@@ -342,6 +354,7 @@ export class WorkspaceEditor {
       fill: "rgba(0, 0, 200, 0.5)",
       visible: false,
     });
+    this.previewLines = new Map();
     this.selectionVertices = {
       x1: 0,
       x2: 0,
@@ -357,7 +370,7 @@ export class WorkspaceEditor {
     this.initialState = initialState;
     this.initialize(initialState);
 
-    this.physics.addEventListener("message", this.handlePhysicsResponse);
+    this.physics.addEventListener("message", (event) => this.handlePhysicsResponse(this, event));
   }
 
   sizeToContainer() {
@@ -519,13 +532,73 @@ export class WorkspaceEditor {
       }
     }
     this.initialState = this.bodies.map((body) => body.initialState);
-    this.physics.postMessage({
-      action: "initialize",
-      bodies: this.initialState,
-    });
+    this.unrenderedFrames = [];
+    this.renderedFrames = [];
+    this.previewFrames = [];
+    if (!this.physicsBusy) {
+      this.physics.postMessage({
+        action: "initialize",
+        bodies: this.initialState,
+      });
+    }
+    this.physicsBusy = true;
   }
 
-  handlePhysicsResponse(event: CanvasMessageEvent) {
-    console.log(event.data);
+  addPreviewLine(canvasId: string, points: number[]) {
+    const previewLine = new Konva.Line({
+      points,
+      stroke: "gray",
+      strokeWidth: 1,
+    });
+    this.backgroundLayer.add(previewLine);
+    this.previewLines.set(canvasId, previewLine);
+  }
+
+  removePreviewLine(canvasId: string) {
+    this.previewLines.get(canvasId)?.remove();
+    this.previewLines.delete(canvasId);
+  }
+
+  getPreviewPointsFromMarble(marble: Marble) {
+    const points: number[] = [];
+    for (let i = 0; i < this.previewFrames.length; i += 10) {
+      const frame = this.previewFrames[i];
+      const serializedMarble = frame.bodies.find((body) => body.canvasId === marble.id());
+      if (!serializedMarble) return points;
+      points.push(serializedMarble.x, serializedMarble.y);
+    }
+
+    return points;
+  }
+
+  getMarbles(): Marble[] {
+    return this.bodies.filter((body) => body.name() === "marble") as Marble[];
+  }
+
+  updatePreviewLines() {
+    const marbles = this.getMarbles();
+    for (let i = 0; i < marbles.length; i++) {
+      const marble = marbles[i];
+      const points = this.getPreviewPointsFromMarble(marble);
+
+      const previewLine = this.previewLines.get(marble.id());
+      if (previewLine) {
+        previewLine.remove();
+      }
+      this.addPreviewLine(marble.id(), points);
+    }
+  }
+
+  handlePhysicsResponse(self: WorkspaceEditor, event: CanvasMessageEvent) {
+    if (event.data.action === "initialize") {
+      this.physicsBusy = false;
+    }
+    if (event.data.action === "clear preview") {
+      self.previewFrames = [];
+    }
+    if (event.data.action === "preview") {
+      event.data.frames && self.previewFrames.push(...event.data.frames);
+      self.updatePreviewLines();
+    }
   }
 }
