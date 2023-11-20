@@ -159,6 +159,14 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   return getSerializedBody(rectangleBody);
 };
 
+const createAndAddLowerBoundary = () => {
+  const boundary = Bodies.rectangle(0, 2000, 10000, 100, {
+    isStatic: true,
+    label: "boundary",
+  });
+  Composite.add(world, boundary);
+};
+
 const initializeBody = (body: SerializedBody) => {
   const physicsBody = bodiesMap.get(body.canvasId);
   if (physicsBody) {
@@ -192,6 +200,7 @@ const removeBody = (physicsId: number) => {
 const initialize = async (bodies: SerializedBody[], noPreview = false) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
+  createAndAddLowerBoundary();
 
   for (let i = 0; i < world.bodies.length; i++) {
     const body = world.bodies[i];
@@ -233,6 +242,10 @@ Events.on(engine, "collisionEnd", (event) => {
       const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
       const extraVelocity = Vector.create(0, -5);
       Body.setVelocity(marble, Vector.add(marble.velocity, extraVelocity));
+    } else if (pair.bodyA.label === "boundary") {
+      removeBody(pair.bodyB.id);
+    } else if (pair.bodyB.label === "boundary") {
+      removeBody(pair.bodyA.id);
     }
   }
 });
