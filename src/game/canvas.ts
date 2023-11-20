@@ -4,8 +4,8 @@ import { CircleConfig } from "konva/lib/shapes/Circle";
 import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
-import { radToDeg, degToRad } from "./common";
-import { FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
+import { radToDeg, degToRad, lerp } from "./common";
+import { DELTA, FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
 
 type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
@@ -333,15 +333,19 @@ export class WorkspaceEditor {
     y2: number;
   };
   bodies: Body[];
+  bodiesMap: Map<string, Body>;
   physics: Worker;
   physicsBusy: boolean;
   playing: boolean;
+  previousDrawTime: number;
+  disableTransformer: boolean;
 
   constructor(container: HTMLDivElement, initialState: Omit<SerializedBody, "canvasId">[] = []) {
     this.container = container;
     this.physics = new Worker("./src/game/physics.ts", { type: "module" });
     this.physicsBusy = false;
     this.bodies = [];
+    this.bodiesMap = new Map();
     this.unrenderedFrames = [];
     this.renderedFrames = [];
     this.previewFrames = [];
@@ -355,6 +359,8 @@ export class WorkspaceEditor {
     };
     this.sizeToContainer();
     this.playing = false;
+    this.disableTransformer = false;
+    this.previousDrawTime = 0;
 
     this.backgroundLayer = new Konva.Layer({
       listening: false,
@@ -467,29 +473,29 @@ export class WorkspaceEditor {
 
   listenForPointerEvents() {
     this.stage.on("mousedown", (event) => {
+      if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (event.target !== this.stage) return this.stage.draggable(false);
       if (event.evt.button !== 0) return;
-      if (this.playing) return this.transformer.nodes([]);
 
       this.selectionStart(event);
     });
 
     this.stage.on("mousemove", (event) => {
+      if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (!this.selection.visible()) return;
-      if (this.playing) return this.transformer.nodes([]);
       this.selectionDrag(event);
     });
 
     this.stage.on("mouseup", (event) => {
       this.stage.draggable(true);
+      if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (!this.selection.visible()) return;
-      if (this.playing) return this.transformer.nodes([]);
 
       this.selectionEnd(event);
     });
 
     this.stage.on("click tap", (event) => {
-      if (this.playing) return this.transformer.nodes([]);
+      if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (this.selection.visible()) {
         this.transformer.nodes([]);
       }
@@ -513,6 +519,7 @@ export class WorkspaceEditor {
 
   addBody(body: Body) {
     this.bodies.push(body);
+    this.bodiesMap.set(body.id(), body);
     this.interactLayer.add(body);
     this.organizeInteractLayer();
   }
@@ -534,6 +541,15 @@ export class WorkspaceEditor {
   removePreviewLine(canvasId: string) {
     this.previewLines.get(canvasId)?.remove();
     this.previewLines.delete(canvasId);
+  }
+
+  removePreviewLines() {
+    const marbles = this.getMarbles();
+
+    for (let i = marbles.length - 1; i >= 0; i--) {
+      const marble = marbles[i];
+      this.removePreviewLine(marble.id());
+    }
   }
 
   getPreviewPointsFromMarble(marble: Marble) {
@@ -566,18 +582,17 @@ export class WorkspaceEditor {
     }
   }
 
+  disablePreview() {
+    this.physics.postMessage({
+      action: "disable preview",
+      bodies: this.initialState,
+    });
+    this.physicsBusy = true;
+    this.removePreviewLines();
+  }
+
   cleanup() {
-    const marbles = this.getMarbles();
-
-    for (let i = marbles.length - 1; i >= 0; i--) {
-      const marble = marbles[i];
-      const previewLine = this.previewLines.get(marble.id());
-      if (previewLine) {
-        previewLine.remove();
-        this.previewLines.delete(marble.id());
-      }
-    }
-
+    this.removePreviewLines();
     for (let i = this.bodies.length - 1; i >= 0; i--) {
       const body = this.bodies[i];
       body.cleanup();
@@ -585,7 +600,7 @@ export class WorkspaceEditor {
     }
   }
 
-  initialize(bodies?: Omit<SerializedBody, "canvasId">[]) {
+  initialize(bodies?: Omit<SerializedBody, "canvasId">[], enablePreview = false) {
     if (bodies) {
       if (this.bodies.length) {
         this.cleanup();
@@ -632,46 +647,117 @@ export class WorkspaceEditor {
     this.renderedFrames = [];
     this.previewFrames = [];
     if (!this.physicsBusy) {
-      this.physics.postMessage({
-        action: "initialize",
-        bodies: this.initialState,
-      });
+      if (enablePreview) {
+        this.physics.postMessage({
+          action: "enable preview",
+          bodies: this.initialState,
+        });
+      } else {
+        this.physics.postMessage({
+          action: "initialize",
+          bodies: this.initialState,
+        });
+      }
       this.physicsBusy = true;
     }
   }
 
-  update(delta: number) {}
+  toggleDraggableBodies() {
+    for (let i = 0; i < this.bodies.length; i++) {
+      const body = this.bodies[i];
 
-  draw(self: WorkspaceEditor, delta: number) {
-    console.log("draw");
+      if (this.disableTransformer) {
+        body.draggable(false);
+      } else {
+        body.draggable(true);
+      }
+    }
+  }
+
+  requestPhysicsUpdate() {
+    this.physics.postMessage({
+      action: "update",
+    });
+  }
+
+  update(delta: number) {
+    if (this.unrenderedFrames.length <= FRAME_CACHE_SIZE && !this.physicsBusy) {
+      this.requestPhysicsUpdate();
+      this.physicsBusy = true;
+    }
+
+    let nextFrame = this.unrenderedFrames[0];
+    if (!nextFrame) return;
+
+    let remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
+    while (delta > remainingRenderTime && this.unrenderedFrames[1]) {
+      delta -= remainingRenderTime;
+      nextFrame = this.unrenderedFrames[1];
+      remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
+      this.unrenderedFrames.shift();
+    }
+
+    const deltaRatio = delta / remainingRenderTime <= 1 ? delta / remainingRenderTime : DELTA;
+
+    for (let i = 0; i < nextFrame.bodies.length; i++) {
+      const serializedBody = nextFrame.bodies[i];
+      const body = this.bodiesMap.get(serializedBody.canvasId);
+      if (!body) {
+        throw new ReferenceError(`Body with ID ${serializedBody.canvasId} couldn't be found in bodyData Map.`);
+      }
+
+      body.x(lerp(body.x(), serializedBody.x, deltaRatio));
+      body.y(lerp(body.y(), serializedBody.y, deltaRatio));
+      body.rotation(lerp(body.rotation(), radToDeg(serializedBody.rotation), deltaRatio));
+
+      nextFrame.timeSpentRendering += delta;
+      if (nextFrame.timeSpentRendering > DELTA) this.unrenderedFrames.shift();
+    }
+  }
+
+  draw(self: WorkspaceEditor, time: number, firstCall = false) {
+    const delta = firstCall ? DELTA : time - self.previousDrawTime;
+    self.previousDrawTime = time;
     if (!self.playing) return;
+
+    self.update(delta);
+    self.stage.draw();
+    requestAnimationFrame((time) => self.draw(self, time));
   }
 
   play(self: WorkspaceEditor) {
-    console.log("play");
+    !self.disableTransformer && self.disablePreview();
     self.playing = true;
-    requestAnimationFrame((delta) => self.draw(self, delta));
+    self.disableTransformer = true;
+    self.toggleDraggableBodies();
+    requestAnimationFrame((time) => self.draw(self, time, true));
   }
 
   pause(self: WorkspaceEditor) {
-    console.log("pause");
-    this.playing = false;
+    self.playing = false;
   }
 
   stop(self: WorkspaceEditor) {
-    console.log("stop");
     this.playing = false;
-    this.initialize(this.initialState);
+    this.disableTransformer = false;
+    self.initialize(self.initialState, true);
+    self.recenter();
   }
 
   handlePhysicsResponse(self: WorkspaceEditor, event: CanvasMessageEvent) {
     if (event.data.action === "initialize") {
-      this.physicsBusy = false;
+      self.physicsBusy = false;
     }
+
     if (event.data.action === "preview") {
       self.previewFrames = [];
       event.data.frames && self.previewFrames.push(...event.data.frames);
       self.updatePreviewLines();
+    }
+
+    if (event.data.action === "update") {
+      self.unrenderedFrames.push(...(event.data.frames || []));
+      self.physicsBusy = false;
     }
   }
 }

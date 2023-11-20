@@ -17,10 +17,16 @@ export type SerializedBody = {
   frontColor?: string;
   backColor?: string;
   isStatic?: boolean;
-  measuredFromCenter?: boolean;
 };
 export type Frame = { id: number; bodies: SerializedBody[]; calcDuration: number; timeSpentRendering: number };
-export type WorkerAction = "initialize" | "preview" | "clear preview" | "update" | "destroy";
+export type WorkerAction =
+  | "initialize"
+  | "preview"
+  | "disable preview"
+  | "enable preview"
+  | "clear preview"
+  | "update"
+  | "destroy";
 type PhysicsMessageData = {
   action: WorkerAction;
   bodies?: SerializedBody[];
@@ -28,11 +34,12 @@ type PhysicsMessageData = {
 type PhysicsMessageEvent = Omit<MessageEvent, "data"> & { data: PhysicsMessageData };
 
 let frameId = 0;
+let noPreview = false;
 let previewing = false;
 let lastPreviewTime = -10000;
 const engine = Engine.create({
   gravity: {
-    scale: 0.0005,
+    scale: 0.01,
   },
 });
 const world = engine.world;
@@ -41,14 +48,49 @@ let initialState: SerializedBody[] = [];
 const physicsToCanvasMap = new Map<number, string>();
 const bodiesMap = new Map<string, Body>();
 
+const centerPositionFromTopLeft = (rectangle: SerializedBody) => {
+  const topCenterPosition = {
+    x: rectangle.x + ((rectangle.width || 0) / 2) * Math.cos(rectangle.rotation),
+    y: rectangle.y + ((rectangle.width || 0) / 2) * Math.sin(rectangle.rotation),
+  };
+  const slope = {
+    x: topCenterPosition.x - rectangle.x,
+    y: topCenterPosition.y - rectangle.y,
+  };
+  const distance = Math.sqrt(slope.x ** 2 + slope.y ** 2);
+  const unit = {
+    x: slope.x / distance,
+    y: slope.y / distance,
+  };
+  const rotated = {
+    x: -unit.y,
+    y: unit.x,
+  };
+  return {
+    x: topCenterPosition.x + ((rectangle.height || 0) / 2) * rotated.x,
+    y: topCenterPosition.y + ((rectangle.height || 0) / 2) * rotated.y,
+  };
+};
+
+const topLeftPositionFromCenter = (body: Body) => {
+  return body.vertices[0];
+};
+
 const getSerializedBody = (body: Body) => {
+  let x = body.position.x;
+  let y = body.position.y;
+  if (body.label.includes("block")) {
+    const topLeftPosition = topLeftPositionFromCenter(body);
+    x = topLeftPosition.x;
+    y = topLeftPosition.y;
+  }
+
   const serializedBody: SerializedBody = {
     canvasId: physicsToCanvasMap.get(body.id) || "not found",
     physicsId: body.id,
-    x: body.position.x,
-    y: body.position.y,
+    x,
+    y,
     rotation: body.angle,
-    measuredFromCenter: true,
   };
 
   return serializedBody;
@@ -114,44 +156,16 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   }
 
   const isTrack = rectangle.type?.includes("track");
-  let rectangleBody = Bodies.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height, {
+
+  const centerPosition = centerPositionFromTopLeft(rectangle);
+
+  const rectangleBody = Bodies.rectangle(centerPosition.x, centerPosition.y, rectangle.width, rectangle.height, {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
     restitution: isTrack ? 0.001 : 1,
     friction: isTrack ? 0.1 : 0.01,
     label: isTrack ? "track-block" : "note-block",
   });
-  if (!rectangle.measuredFromCenter) {
-    const topCenterPosition = {
-      x: rectangle.x + (rectangle.width / 2) * Math.cos(rectangle.rotation),
-      y: rectangle.y + (rectangle.width / 2) * Math.sin(rectangle.rotation),
-    };
-    const slope = {
-      x: topCenterPosition.x - rectangle.x,
-      y: topCenterPosition.y - rectangle.y,
-    };
-    const distance = Math.sqrt(slope.x ** 2 + slope.y ** 2);
-    const unit = {
-      x: slope.x / distance,
-      y: slope.y / distance,
-    };
-    const rotated = {
-      x: -unit.y,
-      y: unit.x,
-    };
-    const centerPosition = {
-      x: topCenterPosition.x + (rectangle.height / 2) * rotated.x,
-      y: topCenterPosition.y + (rectangle.height / 2) * rotated.y,
-    };
-
-    rectangleBody = Bodies.rectangle(centerPosition.x, centerPosition.y, rectangle.width, rectangle.height, {
-      isStatic: rectangle.isStatic ? true : false,
-      angle: rectangle.rotation,
-      restitution: isTrack ? 0.001 : 1,
-      friction: isTrack ? 0.1 : 0.01,
-      label: isTrack ? "track-block" : "note-block",
-    });
-  }
   Composite.add(world, rectangleBody);
   physicsToCanvasMap.set(rectangleBody.id, rectangle.canvasId);
   bodiesMap.set(rectangle.canvasId, rectangleBody);
@@ -197,7 +211,7 @@ const removeBody = (physicsId: number) => {
   bodiesMap.delete(canvasId);
 };
 
-const initialize = async (bodies: SerializedBody[], noPreview = false) => {
+const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
   createAndAddLowerBoundary();
@@ -259,5 +273,31 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
     }
 
     initialize(data.bodies);
+  }
+
+  if (data.action === "disable preview") {
+    if (!data.bodies) {
+      throw new TypeError("A message was received to disable the physics engine preview, but no bodies were passed.");
+    }
+    noPreview = true;
+
+    initialize(data.bodies);
+  }
+
+  if (data.action === "enable preview") {
+    if (!data.bodies) {
+      throw new TypeError("A message was received to enable the physics engine preview, but no bodies were passed.");
+    }
+    noPreview = false;
+
+    initialize(data.bodies);
+  }
+
+  if (data.action === "update") {
+    update();
+    postMessage({
+      action: "update",
+      frames,
+    });
   }
 });
