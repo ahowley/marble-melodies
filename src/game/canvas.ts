@@ -540,8 +540,8 @@ export class WorkspaceEditor {
         action: "initialize",
         bodies: this.initialState,
       });
+      this.physicsBusy = true;
     }
-    this.physicsBusy = true;
   }
 
   addPreviewLine(canvasId: string, points: number[]) {
@@ -593,10 +593,8 @@ export class WorkspaceEditor {
     if (event.data.action === "initialize") {
       this.physicsBusy = false;
     }
-    if (event.data.action === "clear preview") {
-      self.previewFrames = [];
-    }
     if (event.data.action === "preview") {
+      self.previewFrames = [];
       event.data.frames && self.previewFrames.push(...event.data.frames);
       self.updatePreviewLines();
     }

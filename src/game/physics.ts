@@ -1,4 +1,4 @@
-import { Engine, Body, Bodies, Composite } from "matter-js";
+import { Engine, Body, Bodies, Composite, Events, Vector } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT } from "./config";
 import Konva from "konva";
 
@@ -71,12 +71,14 @@ const renderPreview = async () => {
   postMessage({
     action: "clear preview",
   });
+  const previewFrames: Frame[] = [];
   for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE) {
     for (let j = 0; j < FRAME_CACHE_SIZE; j++) {
       const frame = getNextFrame();
-      if (j === 0) postMessage({ action: "preview", frames: [frame] });
+      if (j === 0) previewFrames.push(frame);
     }
   }
+  postMessage({ action: "preview", frames: previewFrames });
   previewing = false;
 };
 
@@ -93,11 +95,11 @@ const createAndAddCircle = (circle: SerializedBody) => {
   const circleBody = Bodies.circle(circle.x, circle.y, circle.radius || 20, {
     angle: circle.rotation ? circle.rotation : 0,
     isStatic: circle.isStatic ? true : false,
-    restitution: 0.8,
+    restitution: 0.4,
     frictionAir: 0.01,
     friction: 0.01,
     frictionStatic: 0.25,
-    label: "circle",
+    label: "marble",
   });
   Composite.add(world, circleBody);
   physicsToCanvasMap.set(circleBody.id, circle.canvasId);
@@ -111,11 +113,11 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
     throw new TypeError("Please include a width and height when creating a rectangle.");
   }
 
-  const isTrack = rectangle.type?.includes("block");
+  const isTrack = rectangle.type?.includes("track");
   let rectangleBody = Bodies.rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height, {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
-    restitution: isTrack ? 0 : 10,
+    restitution: isTrack ? 0.001 : 1,
     friction: isTrack ? 0.1 : 0.01,
     label: isTrack ? "track-block" : "note-block",
   });
@@ -141,14 +143,14 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
       x: topCenterPosition.x + (rectangle.height / 2) * rotated.x,
       y: topCenterPosition.y + (rectangle.height / 2) * rotated.y,
     };
+
     rectangleBody = Bodies.rectangle(centerPosition.x, centerPosition.y, rectangle.width, rectangle.height, {
       isStatic: rectangle.isStatic ? true : false,
       angle: rectangle.rotation,
-      restitution: isTrack ? 0 : 10,
+      restitution: isTrack ? 0.001 : 1,
       friction: isTrack ? 0.1 : 0.01,
       label: isTrack ? "track-block" : "note-block",
     });
-    if (isTrack) rectangleBody.density = 0.5;
   }
   Composite.add(world, rectangleBody);
   physicsToCanvasMap.set(rectangleBody.id, rectangle.canvasId);
@@ -218,6 +220,22 @@ const initialize = async (bodies: SerializedBody[], noPreview = false) => {
     await renderPreview();
   }
 };
+
+Events.on(engine, "collisionEnd", (event) => {
+  const { pairs } = event;
+
+  for (let i = 0; i < pairs.length; i++) {
+    const pair = pairs[i];
+    if (
+      (pair.bodyA.label === "marble" && pair.bodyB.label === "note-block") ||
+      (pair.bodyA.label === "note-block" && pair.bodyB.label === "mable")
+    ) {
+      const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
+      const extraVelocity = Vector.create(0, -5);
+      Body.setVelocity(marble, Vector.add(marble.velocity, extraVelocity));
+    }
+  }
+});
 
 addEventListener("message", async (event: PhysicsMessageEvent) => {
   const { data } = event;
