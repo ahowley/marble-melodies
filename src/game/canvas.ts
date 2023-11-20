@@ -756,7 +756,6 @@ export class WorkspaceEditor {
     self.playing = false;
     self.disableTransformer = false;
     self.initialize(self.initialState, true);
-    self.recenter();
     if (self.stopCallback) {
       self.stopCallback();
     }

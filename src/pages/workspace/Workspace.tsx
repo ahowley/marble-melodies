@@ -17,6 +17,15 @@ export const Workspace: Component = () => {
             gradientEnd: "blue",
           },
           {
+            type: "marble",
+            x: 500,
+            y: 400,
+            rotation: 0,
+            radius: 20,
+            gradientStart: "white",
+            gradientEnd: "blue",
+          },
+          {
             type: "track-block",
             x: 100,
             y: 200,
@@ -28,7 +37,7 @@ export const Workspace: Component = () => {
           },
           {
             type: "track-block",
-            x: 100,
+            x: 200,
             y: 200,
             rotation: -1,
             width: 300,
