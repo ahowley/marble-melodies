@@ -1,0 +1,15 @@
+@use "../../styles/util" as *;
+
+.playback {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding-top: 2rem;
+
+  .button {
+    display: grid;
+  }
+}

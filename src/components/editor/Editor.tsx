@@ -1,9 +1,14 @@
-import { type Component, onMount, onCleanup } from "solid-js";
+import { type Component, onMount, onCleanup, Accessor } from "solid-js";
 import { WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
 import "./Editor.scss";
 
-export const Editor: Component<{ initialState: Omit<SerializedBody, "canvasId">[] }> = (props) => {
+type EditorProps = {
+  initialState: Omit<SerializedBody, "canvasId">[];
+  playing: Accessor<boolean>;
+};
+
+export const Editor: Component<EditorProps> = (props) => {
   let container: HTMLDivElement;
 
   onMount(() => {
