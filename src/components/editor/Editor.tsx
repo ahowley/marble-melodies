@@ -1,20 +1,36 @@
-import { type Component, onMount, onCleanup, Accessor } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal } from "solid-js";
 import { WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
+import { Playback } from "../playback/Playback";
 import "./Editor.scss";
 
 type EditorProps = {
   initialState: Omit<SerializedBody, "canvasId">[];
-  playing: Accessor<boolean>;
 };
 
 export const Editor: Component<EditorProps> = (props) => {
+  const [playing, setPlaying] = createSignal(false);
+  const [editor, setEditor] = createSignal<WorkspaceEditor>();
   let container: HTMLDivElement;
 
+  const togglePlay = () => {
+    if (playing()) {
+      editor()?.pause(editor() as WorkspaceEditor);
+    } else {
+      editor()?.play(editor() as WorkspaceEditor);
+    }
+    setPlaying(!playing());
+  };
+
+  const handleStop = () => {
+    editor()?.stop(editor() as WorkspaceEditor);
+    setPlaying(false);
+  };
+
   onMount(() => {
-    const editor = new WorkspaceEditor(container, props.initialState);
+    setEditor(new WorkspaceEditor(container, props.initialState));
     const resizeListener = () => {
-      editor.sizeToContainer();
+      editor()?.sizeToContainer();
     };
     addEventListener("resize", resizeListener);
 
@@ -23,5 +39,10 @@ export const Editor: Component<EditorProps> = (props) => {
     });
   });
 
-  return <div class="konva-container" ref={container!} onContextMenu={(event) => event.preventDefault()} />;
+  return (
+    <>
+      <Playback playing={playing} togglePlay={togglePlay} handleStop={handleStop} />
+      <div class="konva-container" ref={container!} onContextMenu={(event) => event.preventDefault()} />
+    </>
+  );
 };

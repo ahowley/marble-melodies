@@ -13,7 +13,7 @@ type PlaybackProps = {
 export const Playback: Component<PlaybackProps> = (props) => {
   return (
     <form class="playback">
-      {props.playing() ? (
+      {!props.playing() ? (
         <button type="button" class="button" onClick={props.togglePlay}>
           Play <img src={play} alt="A play icon - tap or click to play the current track." />
         </button>

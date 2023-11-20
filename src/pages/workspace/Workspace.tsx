@@ -1,16 +1,10 @@
-import { createSignal, type Component } from "solid-js";
+import { type Component } from "solid-js";
 import { Editor } from "../../components/editor/Editor";
-import { Playback } from "../../components/playback/Playback";
 import "./Workspace.scss";
 
 export const Workspace: Component = () => {
-  const [playing, setPlaying] = createSignal(false);
-
-  const togglePlay = () => setPlaying(!playing());
-
   return (
     <main id="workspace">
-      <Playback playing={playing} togglePlay={togglePlay} handleStop={() => {}} />
       <Editor
         initialState={[
           {
@@ -43,7 +37,6 @@ export const Workspace: Component = () => {
             gradientEnd: "darkblue",
           },
         ]}
-        playing={playing}
       />
     </main>
   );
