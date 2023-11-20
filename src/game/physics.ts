@@ -38,6 +38,7 @@ let noPreview = false;
 let previewing = false;
 let lastPreviewTime = -10000;
 const engine = Engine.create({
+  // TODO - configure engine to figure out why collisions look kind of funny
   gravity: {
     scale: 0.01,
   },
@@ -214,7 +215,7 @@ const removeBody = (physicsId: number) => {
 const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
-  createAndAddLowerBoundary();
+  // createAndAddLowerBoundary(); // TODO: Figure out lower boundary and make it work
 
   for (let i = 0; i < world.bodies.length; i++) {
     const body = world.bodies[i];
@@ -234,6 +235,7 @@ const initialize = async (bodies: SerializedBody[]) => {
   }
 
   initialState = initialized;
+  console.log(initialState);
   postMessage({
     action: "initialize",
     bodies: initialState,
@@ -268,6 +270,7 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   const { data } = event;
 
   if (data.action === "initialize") {
+    console.log("[physics] initialize");
     if (!data.bodies) {
       throw new TypeError("A message was received to initialize the physics engine, but no bodies were passed.");
     }
@@ -276,6 +279,7 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "disable preview") {
+    console.log("[physics] disble preview");
     if (!data.bodies) {
       throw new TypeError("A message was received to disable the physics engine preview, but no bodies were passed.");
     }
@@ -285,6 +289,7 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "enable preview") {
+    console.log("[physics] enable preview");
     if (!data.bodies) {
       throw new TypeError("A message was received to enable the physics engine preview, but no bodies were passed.");
     }
@@ -294,6 +299,7 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "update") {
+    console.log("[physics] update");
     update();
     postMessage({
       action: "update",

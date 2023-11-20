@@ -646,13 +646,13 @@ export class WorkspaceEditor {
     this.unrenderedFrames = [];
     this.renderedFrames = [];
     this.previewFrames = [];
-    if (!this.physicsBusy) {
-      if (enablePreview) {
-        this.physics.postMessage({
-          action: "enable preview",
-          bodies: this.initialState,
-        });
-      } else {
+    if (enablePreview) {
+      this.physics.postMessage({
+        action: "enable preview",
+        bodies: this.initialState,
+      });
+    } else {
+      if (!this.physicsBusy) {
         this.physics.postMessage({
           action: "initialize",
           bodies: this.initialState,
@@ -700,6 +700,7 @@ export class WorkspaceEditor {
     const deltaRatio = delta / remainingRenderTime <= 1 ? delta / remainingRenderTime : DELTA;
 
     for (let i = 0; i < nextFrame.bodies.length; i++) {
+      if (!this.playing) return;
       const serializedBody = nextFrame.bodies[i];
       const body = this.bodiesMap.get(serializedBody.canvasId);
       if (!body) {
