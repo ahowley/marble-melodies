@@ -27,6 +27,26 @@ export const Workspace: Component = () => {
             backColor: "gray",
           },
           {
+            type: "track-block",
+            x: 100,
+            y: 200,
+            rotation: -1,
+            width: 300,
+            height: 10,
+            frontColor: "lightgray",
+            backColor: "gray",
+          },
+          {
+            type: "track-block",
+            x: 100,
+            y: 400,
+            rotation: -1,
+            width: 300,
+            height: 10,
+            frontColor: "lightgray",
+            backColor: "gray",
+          },
+          {
             type: "note-block",
             x: 100,
             y: 400,
@@ -35,6 +55,16 @@ export const Workspace: Component = () => {
             height: 50,
             gradientStart: "blue",
             gradientEnd: "darkblue",
+          },
+          {
+            type: "note-block",
+            x: 800,
+            y: 400,
+            rotation: 0.5,
+            width: 100,
+            height: 50,
+            gradientStart: "red",
+            gradientEnd: "darkred",
           },
         ]}
       />

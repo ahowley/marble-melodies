@@ -1,4 +1,4 @@
-import { Engine, Body, Bodies, Composite, Events, Vector } from "matter-js";
+import { Engine, Body, Bodies, Composite, Events, Vector, World } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT } from "./config";
 
 export type SerializedBody = {
@@ -44,7 +44,6 @@ let previewing = false;
 let lastPreviewTime = -10000;
 let hasMovingBodies = true;
 const engine = Engine.create({
-  // TODO - configure engine to figure out why collisions look kind of funny
   gravity: {
     scale: 0.01,
   },
@@ -155,10 +154,10 @@ const createAndAddCircle = (circle: SerializedBody) => {
   const circleBody = Bodies.circle(circle.x, circle.y, circle.radius || 20, {
     angle: circle.rotation ? circle.rotation : 0,
     isStatic: circle.isStatic ? true : false,
-    restitution: 0.4,
+    restitution: 0.3,
     frictionAir: 0.01,
-    friction: 0.01,
-    frictionStatic: 0.25,
+    friction: 0.05,
+    frictionStatic: 0.01,
     label: "marble",
   });
 
@@ -179,8 +178,8 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   const rectangleBody = Bodies.rectangle(centerPosition.x, centerPosition.y, rectangle.width, rectangle.height, {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
-    restitution: isTrack ? 0.001 : 1,
-    friction: isTrack ? 0.1 : 0.01,
+    restitution: isTrack ? 0 : 1,
+    friction: isTrack ? 0.6 : 0,
     label: isTrack ? "track-block" : "note-block",
   });
 
@@ -234,18 +233,9 @@ const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
   const canvasIds = bodies.map((body) => body.canvasId);
 
-  for (let i = 0; i < world.bodies.length; i++) {
-    const body = world.bodies[i];
-    const canvasId = physicsToCanvasMap.get(body.id);
-    if (!canvasId) {
-      Composite.remove(world, body);
-      hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
-      continue;
-    }
-    if (!canvasIds.includes(canvasId)) {
-      removeBody(body.id);
-    }
-  }
+  World.clear(world, false);
+  bodiesMap.clear();
+  physicsToCanvasMap.clear();
 
   createAndAddLowerBoundary();
   for (let i = 0; i < bodies.length; i++) {
@@ -265,22 +255,6 @@ const initialize = async (bodies: SerializedBody[]) => {
   }
 };
 
-Events.on(engine, "collisionEnd", (event) => {
-  const { pairs } = event;
-
-  for (let i = 0; i < pairs.length; i++) {
-    const pair = pairs[i];
-    if (
-      (pair.bodyA.label === "marble" && pair.bodyB.label === "note-block") ||
-      (pair.bodyA.label === "note-block" && pair.bodyB.label === "mable")
-    ) {
-      const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
-      const extraVelocity = Vector.create(0, -5);
-      Body.setVelocity(marble, Vector.add(marble.velocity, extraVelocity));
-    }
-  }
-});
-
 Events.on(engine, "collisionStart", (event) => {
   const { pairs } = event;
 
@@ -292,11 +266,35 @@ Events.on(engine, "collisionStart", (event) => {
   }
 });
 
+Events.on(engine, "collisionEnd", (event) => {
+  const { pairs } = event;
+  const alreadyCalculated: Body[] = [];
+
+  for (let i = 0; i < pairs.length; i++) {
+    const pair = pairs[i];
+
+    if (
+      (pair.bodyA.label === "marble" && pair.bodyB.label === "note-block") ||
+      (pair.bodyA.label === "note-block" && pair.bodyB.label === "marble")
+    ) {
+      const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
+      const block = pair.bodyA.label === "marble" ? pair.bodyB : pair.bodyA;
+      if (alreadyCalculated.includes(block)) continue;
+
+      const collisionNormal = pair.collision.normal;
+      const bounceFactor = 1 * Vector.magnitude(marble.velocity);
+      const addVelocity = Vector.mult(collisionNormal, bounceFactor);
+      const newVelocity = Vector.add(marble.velocity, addVelocity);
+      Body.setVelocity(marble, newVelocity);
+      alreadyCalculated.push(block);
+    }
+  }
+});
+
 addEventListener("message", async (event: PhysicsMessageEvent) => {
   const { data } = event;
 
   if (data.action === "initialize") {
-    console.log("[physics] initialize");
     if (!data.bodies) {
       throw new TypeError("A message was received to initialize the physics engine, but no bodies were passed.");
     }
@@ -305,7 +303,6 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "disable preview") {
-    console.log("[physics] disable preview");
     if (!data.bodies) {
       throw new TypeError("A message was received to disable the physics engine preview, but no bodies were passed.");
     }
@@ -315,7 +312,6 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
   }
 
   if (data.action === "enable preview") {
-    console.log("[physics] enable preview");
     if (!data.bodies) {
       throw new TypeError("A message was received to enable the physics engine preview, but no bodies were passed.");
     }

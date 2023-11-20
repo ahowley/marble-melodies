@@ -503,10 +503,6 @@ export class WorkspaceEditor {
     });
 
     this.stage.on("click tap", (event) => {
-      if (this.needsPreviewUpdate) {
-        this.initialize();
-        this.needsPreviewUpdate = false;
-      }
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (this.selection.visible()) {
         this.transformer.nodes([]);
@@ -769,6 +765,10 @@ export class WorkspaceEditor {
   handlePhysicsResponse(self: WorkspaceEditor, event: CanvasMessageEvent) {
     if (event.data.action === "initialize") {
       self.physicsBusy = false;
+      if (this.needsPreviewUpdate) {
+        this.initialize();
+        this.needsPreviewUpdate = false;
+      }
     }
 
     if (event.data.action === "preview") {
