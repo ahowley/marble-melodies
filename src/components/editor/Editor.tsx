@@ -38,13 +38,21 @@ export const Editor: Component<EditorProps> = (props) => {
 
   onMount(() => {
     props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
+
     const resizeListener = () => {
       props.editor()?.sizeToContainer();
     };
+    const pointerDownListener = (event: PointerEvent) => {
+      if (!(event.target instanceof HTMLCanvasElement)) {
+        props.editor()?.transformer.nodes([]);
+      }
+    };
     addEventListener("resize", resizeListener);
+    addEventListener("pointerdown", pointerDownListener);
 
     onCleanup(() => {
       removeEventListener("resize", resizeListener);
+      removeEventListener("pointerdown", pointerDownListener);
     });
   });
 

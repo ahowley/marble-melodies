@@ -5,7 +5,7 @@ import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
-import { DELTA, FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
+import { COLORS, DELTA, FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
 type Body = Marble | TrackBlock | NoteBlock;
@@ -44,7 +44,8 @@ class Marble extends Konva.Circle {
       fillRadialGradientStartRadius: radius / 4,
       fillRadialGradientEndRadius: radius * 1.5,
       fillPriority: "radial-gradient",
-      shadowColor: "black",
+      shadowColor: COLORS.backgroundDark,
+      shadowOpacity: 0.5,
       shadowBlur: 10,
       shadowOffset: {
         x: 3,
@@ -131,8 +132,8 @@ class TrackBlock extends Konva.Rect {
       height,
       fill: frontColor,
       cornerRadius: Math.min(width, height) / 2,
-      shadowColor: "black",
-      shadowOpacity: 0.75,
+      shadowColor: COLORS.backgroundDark,
+      shadowOpacity: 0.5,
       shadowBlur: 10,
       shadowOffset: {
         x: 3,
@@ -151,7 +152,8 @@ class TrackBlock extends Konva.Rect {
       height,
       fill: backColor,
       cornerRadius: Math.min(width, height) / 2,
-      shadowColor: "black",
+      shadowColor: COLORS.backgroundDark,
+      shadowOpacity: 0.5,
       shadowBlur: 10,
       shadowOffset: {
         x: 3,
@@ -254,7 +256,8 @@ class NoteBlock extends Konva.Rect {
       },
       fillPriority: "linear-gradient",
       cornerRadius: 5,
-      shadowColor: "black",
+      shadowColor: COLORS.backgroundDark,
+      shadowOpacity: 0.5,
       shadowBlur: 10,
       shadowOffset: {
         x: 3,
@@ -478,6 +481,7 @@ export class WorkspaceEditor {
 
   recenter() {
     this.stage.position({ x: 0, y: 0 });
+    this.stageOffset = { offsetX: 0, offsetY: 0 };
   }
 
   listenForPointerEvents() {
@@ -515,7 +519,9 @@ export class WorkspaceEditor {
       this.selectionTap(event);
     });
 
-    this.stage.on("dragend", (event) => (this.stageOffset = { offsetX: event.target.x(), offsetY: event.target.y() }));
+    this.stage.on("pointerup", (event) => {
+      return (this.stageOffset = { offsetX: event.target.x(), offsetY: event.target.y() });
+    });
 
     this.stage.on("dblclick dbltap", (event) => {
       if (event.target !== this.stage) return;
@@ -543,7 +549,10 @@ export class WorkspaceEditor {
     const previewLine = new Konva.Line({
       points,
       stroke: "gray",
-      strokeWidth: 1,
+      strokeWidth: 3,
+      lineCap: "round",
+      lineJoin: "round",
+      tension: 0.5,
     });
     this.backgroundLayer.add(previewLine);
     this.previewLines.set(canvasId, previewLine);
@@ -565,7 +574,7 @@ export class WorkspaceEditor {
 
   getPreviewPointsFromMarble(marble: Marble) {
     const points: number[] = [];
-    for (let i = 0; i < this.previewFrames.length; i += 10) {
+    for (let i = 0; i < this.previewFrames.length; i++) {
       const frame = this.previewFrames[i];
       const serializedMarble = frame.bodies.find((body) => body.canvasId === marble.id());
       if (!serializedMarble) return points;

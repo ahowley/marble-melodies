@@ -1,5 +1,5 @@
 import { Engine, Body, Bodies, Composite, Events, Vector, World } from "matter-js";
-import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT } from "./config";
+import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT, CACHES_PER_PREVIEW_POINT, BOUNCY_BLOCK_FACTOR } from "./config";
 
 export type BlockTypes = "marble" | "track-block" | "note-block";
 export type SerializedBody = {
@@ -121,11 +121,19 @@ const renderPreview = async () => {
   postMessage({
     action: "clear preview",
   });
+
+  let marbleCount = world.bodies.reduce((a, c) => (c.label === "marble" ? a + 1 : a), 0);
+  let previewFrameCount = PREVIEW_FRAME_COUNT(marbleCount);
+  let cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT(marbleCount);
   const previewFrames: Frame[] = [];
-  for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE) {
-    for (let j = 0; j < FRAME_CACHE_SIZE; j++) {
-      const frame = getNextFrame(true);
-      if (j === 0) previewFrames.push(frame);
+  for (let i = 0; i < previewFrameCount; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
+    for (let j = 0; j < FRAME_CACHE_SIZE * cachesPerPreviewPoint; j++) {
+      if (j === 0) {
+        const frame = getNextFrame(true);
+        previewFrames.push(frame);
+      } else {
+        Engine.update(engine, DELTA);
+      }
     }
   }
   postMessage({ action: "preview", frames: previewFrames });
@@ -155,10 +163,12 @@ const createAndAddCircle = (circle: SerializedBody) => {
   const circleBody = Bodies.circle(circle.x, circle.y, circle.radius || 20, {
     angle: circle.rotation ? circle.rotation : 0,
     isStatic: circle.isStatic ? true : false,
-    restitution: 0.3,
+    restitution: 0.2,
     frictionAir: 0.01,
-    friction: 0.05,
+    friction: 0.3,
     frictionStatic: 0.01,
+    inertia: 0,
+    inverseInertia: Infinity,
     label: "marble",
   });
 
@@ -180,7 +190,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
     restitution: isTrack ? 0 : 1,
-    friction: isTrack ? 0.6 : 0,
+    friction: isTrack ? 0.4 : 0,
     label: isTrack ? "track-block" : "note-block",
   });
 
@@ -281,11 +291,10 @@ Events.on(engine, "collisionEnd", (event) => {
       const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
       const block = pair.bodyA.label === "marble" ? pair.bodyB : pair.bodyA;
       if (alreadyCalculated.includes(block)) continue;
-
-      const collisionNormal = pair.collision.normal;
-      const bounceFactor = 1 * Vector.magnitude(marble.velocity);
-      const addVelocity = Vector.mult(collisionNormal, bounceFactor);
-      const newVelocity = Vector.add(marble.velocity, addVelocity);
+      const newVelocity = Vector.add(marble.velocity, {
+        x: 0,
+        y: marble.velocity.y < 0 ? marble.velocity.y * BOUNCY_BLOCK_FACTOR : 0,
+      });
       Body.setVelocity(marble, newVelocity);
       alreadyCalculated.push(block);
     }

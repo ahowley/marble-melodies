@@ -8,8 +8,14 @@ $colors: (
   "primary": var(--color-primary),
   "highlight": var(--color-highlight),
   "secondary": var(--color-secondary),
+  "secondary-light": var(--color-secondary-light),
+  "secondary-dark": var(--color-secondary-dark),
   "accent": var(--color-accent),
+  "accent-light": var(--color-accent-light),
+  "accent-dark": var(--color-accent-light),
   "accent-secondary": var(--color-accent-secondary),
+  "accent-secondary-light": var(--color-accent-secondary-light),
+  "accent-secondary-dark": var(--color-accent-secondary-dark),
 );
 
 @function px-as-rem($_num-pixels) {
