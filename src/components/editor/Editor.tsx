@@ -1,31 +1,35 @@
-import { type Component, onMount, onCleanup, createSignal } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, Accessor, Setter } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
 import { WorkspaceEditor, GameState } from "../../game/canvas";
 import { Playback } from "../playback/Playback";
 import "./Editor.scss";
 
 type EditorProps = {
+  editor: Accessor<WorkspaceEditor | undefined>;
+  setEditor: Setter<WorkspaceEditor | undefined>;
   initialState: GameState;
   handleSave: (newState: GameState) => void;
 };
 
 export const Editor: Component<EditorProps> = (props) => {
   const [playing, setPlaying] = createSignal(false);
-  const [editor, setEditor] = createSignal<WorkspaceEditor>();
+  const [stopped, setStopped] = createSignal(true);
   const droppable = createDroppable(1);
   let container: HTMLDivElement;
 
   const togglePlay = () => {
     if (playing()) {
-      editor()?.pause(editor() as WorkspaceEditor);
+      props.editor()?.pause(props.editor() as WorkspaceEditor);
     } else {
-      editor()?.play(editor() as WorkspaceEditor);
+      props.editor()?.play(props.editor() as WorkspaceEditor);
+      setStopped(false);
     }
     setPlaying(!playing());
   };
 
   const handleStop = () => {
-    editor()?.stop(editor() as WorkspaceEditor);
+    props.editor()?.stop(props.editor() as WorkspaceEditor);
+    setStopped(true);
   };
 
   const editorStopCallback = () => {
@@ -33,9 +37,9 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   onMount(() => {
-    setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
+    props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
     const resizeListener = () => {
-      editor()?.sizeToContainer();
+      props.editor()?.sizeToContainer();
     };
     addEventListener("resize", resizeListener);
 
@@ -51,7 +55,12 @@ export const Editor: Component<EditorProps> = (props) => {
       class="droppable"
       classList={{ "!droppable-accept": droppable.isActiveDroppable }}
     >
-      <Playback playing={playing} togglePlay={togglePlay} handleStop={handleStop} />
+      <Playback
+        playing={playing}
+        stopped={stopped}
+        togglePlay={togglePlay}
+        handleStop={handleStop}
+      />
       <div
         class="konva-container"
         ref={container!}
