@@ -9,6 +9,7 @@ $colors: (
   "highlight": var(--color-highlight),
   "secondary": var(--color-secondary),
   "accent": var(--color-accent),
+  "accent-secondary": var(--color-accent-secondary),
 );
 
 @function px-as-rem($_num-pixels) {
