@@ -7,6 +7,7 @@ import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
 import { DELTA, FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
 
+export type GameState = Omit<SerializedBody, "canvasId">[];
 type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
   action: WorkerAction;

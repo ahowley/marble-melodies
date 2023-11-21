@@ -1,4 +1,9 @@
-.konva-container {
+#workspace {
+  display: grid;
   width: 100vw;
   height: 100svh;
+  .konva-container {
+    width: 100vw;
+    height: 100svh;
+  }
 }

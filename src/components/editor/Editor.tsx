@@ -1,16 +1,18 @@
 import { type Component, onMount, onCleanup, createSignal } from "solid-js";
-import { WorkspaceEditor } from "../../game/canvas";
-import { SerializedBody } from "../../game/physics";
+import { createDroppable } from "@thisbeyond/solid-dnd";
+import { WorkspaceEditor, GameState } from "../../game/canvas";
 import { Playback } from "../playback/Playback";
 import "./Editor.scss";
 
 type EditorProps = {
-  initialState: Omit<SerializedBody, "canvasId">[];
+  initialState: GameState;
+  handleSave: (newState: GameState) => void;
 };
 
 export const Editor: Component<EditorProps> = (props) => {
   const [playing, setPlaying] = createSignal(false);
   const [editor, setEditor] = createSignal<WorkspaceEditor>();
+  const droppable = createDroppable(1);
   let container: HTMLDivElement;
 
   const togglePlay = () => {
@@ -43,9 +45,14 @@ export const Editor: Component<EditorProps> = (props) => {
   });
 
   return (
-    <>
+    <main
+      id="workspace"
+      ref={droppable.ref}
+      class="droppable"
+      classList={{ "!droppable-accept": droppable.isActiveDroppable }}
+    >
       <Playback playing={playing} togglePlay={togglePlay} handleStop={handleStop} />
       <div class="konva-container" ref={container!} onContextMenu={(event) => event.preventDefault()} />
-    </>
+    </main>
   );
 };
