@@ -515,6 +515,8 @@ export class WorkspaceEditor {
       this.selectionTap(event);
     });
 
+    this.stage.on("dragend", (event) => (this.stageOffset = { offsetX: event.target.x(), offsetY: event.target.y() }));
+
     this.stage.on("dblclick dbltap", (event) => {
       if (event.target !== this.stage) return;
       this.recenter();
@@ -607,6 +609,7 @@ export class WorkspaceEditor {
       body.cleanup();
       this.bodies.pop();
     }
+    this.bodiesMap.clear();
   }
 
   initialize(bodies?: Omit<SerializedBody, "canvasId">[], enablePreview = false) {

@@ -94,12 +94,16 @@ export const Workspace: Component = () => {
   };
 
   const onDragEnd: DragEventHandler = ({ draggable, droppable }) => {
+    const workspaceEditor = editor();
+    if (!workspaceEditor) return;
+
     if (droppable) {
       const nodeBounds = draggable.node.getBoundingClientRect();
       const radius = draggable.id === "marble" ? nodeBounds.width / 2 : 0;
       const newSerializedBody: Omit<SerializedBody, "canvasId"> = {
-        x: nodeBounds.x + transform.x + radius,
-        y: nodeBounds.y + transform.y + radius,
+        type: draggable.id as BlockTypes,
+        x: nodeBounds.x + transform.x - (workspaceEditor?.stageOffset.offsetX || 0) + radius,
+        y: nodeBounds.y + transform.y - (workspaceEditor?.stageOffset.offsetY || 0) + radius,
         rotation: 0,
       };
 
@@ -113,7 +117,7 @@ export const Workspace: Component = () => {
           newSerializedBody.width = nodeBounds.width;
           newSerializedBody.height = nodeBounds.height;
           newSerializedBody.frontColor = COLORS.highlight;
-          newSerializedBody.gradientEnd = COLORS.secondary;
+          newSerializedBody.backColor = COLORS.secondary;
           break;
         case "note-block":
           newSerializedBody.width = nodeBounds.width;
@@ -123,7 +127,10 @@ export const Workspace: Component = () => {
           break;
       }
 
-      console.log(editor(), newSerializedBody);
+      if (!workspaceEditor.playing && !workspaceEditor.disableTransformer) {
+        console.log("reinit");
+        workspaceEditor.initialize([...workspaceEditor.initialState, newSerializedBody]);
+      }
     }
   };
 
