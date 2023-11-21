@@ -725,7 +725,7 @@ export class WorkspaceEditor {
       this.unrenderedFrames.shift();
     }
 
-    const deltaRatio = delta / remainingRenderTime <= 1 ? delta / remainingRenderTime : DELTA;
+    const deltaRatio = delta / remainingRenderTime; // <= 1 ? delta / remainingRenderTime : DELTA;
 
     for (let i = 0; i < nextFrame.bodies.length; i++) {
       if (!this.playing) return;
@@ -743,7 +743,7 @@ export class WorkspaceEditor {
   }
 
   draw(self: WorkspaceEditor, time: number, firstCall = false) {
-    const delta = firstCall ? DELTA : time - self.previousDrawTime;
+    const delta = firstCall ? time : time - self.previousDrawTime;
     self.previousDrawTime = time;
     if (!self.playing) return;
 

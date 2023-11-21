@@ -48,7 +48,7 @@ let hasMovingBodies = true;
 let previewQueued = false;
 const engine = Engine.create({
   gravity: {
-    scale: 0.01,
+    scale: 0.002,
   },
 });
 const world = engine.world;
@@ -124,9 +124,8 @@ const renderPreview = async () => {
     action: "clear preview",
   });
 
-  let marbleCount = world.bodies.reduce((a, c) => (c.label === "marble" ? a + 1 : a), 0);
-  let previewFrameCount = PREVIEW_FRAME_COUNT(marbleCount);
-  let cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT(marbleCount);
+  let previewFrameCount = PREVIEW_FRAME_COUNT;
+  let cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT;
   const previewFrames: Frame[] = [];
   for (let i = 0; i < previewFrameCount; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
     lastPreviewTime = performance.now();
@@ -174,10 +173,10 @@ const createAndAddCircle = (circle: SerializedBody) => {
   const circleBody = Bodies.circle(circle.x, circle.y, circle.radius || 20, {
     angle: circle.rotation ? circle.rotation : 0,
     isStatic: circle.isStatic ? true : false,
-    restitution: 0.2,
-    frictionAir: 0.01,
-    friction: 0.3,
-    frictionStatic: 0.01,
+    restitution: 0.15,
+    frictionAir: 0,
+    friction: 0.1,
+    frictionStatic: 0,
     inertia: 0,
     inverseInertia: Infinity,
     label: "marble",
@@ -201,7 +200,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
     restitution: isTrack ? 0 : 1,
-    friction: isTrack ? 0.4 : 0,
+    friction: isTrack ? 0.2 : 0,
     label: isTrack ? "track-block" : "note-block",
   });
 
@@ -212,13 +211,13 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   return getSerializedBody(rectangleBody);
 };
 
-const createAndAddLowerBoundary = () => {
-  const boundary = Bodies.rectangle(0, 2000, 10000, 100, {
-    isStatic: true,
-    label: "boundary",
-  });
-  Composite.add(world, boundary);
-};
+// const createAndAddLowerBoundary = () => {
+//   const boundary = Bodies.rectangle(0, 2000, 10000, 100, {
+//     isStatic: true,
+//     label: "boundary",
+//   });
+//   Composite.add(world, boundary);
+// };
 
 const initializeBody = (body: SerializedBody) => {
   const physicsBody = bodiesMap.get(body.canvasId);
@@ -258,7 +257,7 @@ const initialize = async (bodies: SerializedBody[]) => {
   bodiesMap.clear();
   physicsToCanvasMap.clear();
 
-  createAndAddLowerBoundary();
+  // createAndAddLowerBoundary();
   for (let i = 0; i < bodies.length; i++) {
     const serializedBody = initializeBody(bodies[i]);
     serializedBody && initialized.push(serializedBody);

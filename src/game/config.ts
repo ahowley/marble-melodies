@@ -1,15 +1,9 @@
-export const DELTA = 100 / 1000;
-export const FRAME_CACHE_SIZE = 20;
-export const CACHES_PER_PREVIEW_POINT = (numberOfMarbles: number) => {
-  return Math.round(6 + numberOfMarbles * 4);
-};
-export const PREVIEW_FRAME_COUNT = (numberOfMarbles: number) => {
-  if (numberOfMarbles < 4) return 100_000;
-  if (numberOfMarbles < 8) return 90_000;
-  return 75_000;
-};
+export const FRAME_CACHE_SIZE = 1000;
+export const DELTA = 1000 / FRAME_CACHE_SIZE;
+export const CACHES_PER_PREVIEW_POINT = 2 / FRAME_CACHE_SIZE;
+export const PREVIEW_FRAME_COUNT = 10000;
 
-export const BOUNCY_BLOCK_FACTOR = 20;
+export const BOUNCY_BLOCK_FACTOR = 10;
 
 export const COLORS = {
   background: "#252422",
