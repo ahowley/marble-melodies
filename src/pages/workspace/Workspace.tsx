@@ -33,8 +33,8 @@ export const Workspace: Component = () => {
       const radius = draggable.id === "marble" ? nodeBounds.width / 2 : 0;
       const newSerializedBody: Omit<SerializedBody, "canvasId"> = {
         type: draggable.id as BlockTypes,
-        x: nodeBounds.x + transform.x - (workspaceEditor?.stageOffset.offsetX || 0) + radius,
-        y: nodeBounds.y + transform.y - (workspaceEditor?.stageOffset.offsetY || 0) + radius,
+        x: nodeBounds.x + transform.x - (workspaceEditor?.stage.x() || 0) + radius,
+        y: nodeBounds.y + transform.y - (workspaceEditor?.stage.y() || 0) + radius,
         rotation: 0,
       };
 

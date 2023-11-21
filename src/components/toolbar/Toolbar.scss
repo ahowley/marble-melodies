@@ -7,6 +7,7 @@
   border-top-right-radius: 5px;
   background-color: transparent;
   transition: background-color 0.2s ease-out;
+  user-select: none;
 
   .summary {
     width: fit-content;

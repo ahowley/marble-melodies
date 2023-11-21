@@ -30,6 +30,7 @@ export type WorkerAction =
   | "preview"
   | "disable preview"
   | "enable preview"
+  | "update preview"
   | "clear preview"
   | "update"
   | "destroy";
@@ -44,6 +45,7 @@ let noPreview = false;
 let previewing = false;
 let lastPreviewTime = -10000;
 let hasMovingBodies = true;
+let previewQueued = false;
 const engine = Engine.create({
   gravity: {
     scale: 0.01,
@@ -117,7 +119,7 @@ const getNextFrame = (preview = false): Frame => {
 };
 
 const renderPreview = async () => {
-  previewing = true;
+  console.log("rendering preview");
   postMessage({
     action: "clear preview",
   });
@@ -127,6 +129,7 @@ const renderPreview = async () => {
   let cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT(marbleCount);
   const previewFrames: Frame[] = [];
   for (let i = 0; i < previewFrameCount; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
+    lastPreviewTime = performance.now();
     for (let j = 0; j < FRAME_CACHE_SIZE * cachesPerPreviewPoint; j++) {
       if (j === 0) {
         const frame = getNextFrame(true);
@@ -137,8 +140,16 @@ const renderPreview = async () => {
     }
   }
   postMessage({ action: "preview", frames: previewFrames });
-  previewing = false;
 };
+
+setInterval(async () => {
+  if (performance.now() - lastPreviewTime > 100 && !previewing && !noPreview && previewQueued) {
+    previewing = true;
+    previewQueued = false;
+    await renderPreview();
+    previewing = false;
+  }
+}, 100);
 
 const update = (lastFramePassed = false) => {
   if (lastFramePassed) {
@@ -242,7 +253,6 @@ const removeBody = (physicsId: number) => {
 
 const initialize = async (bodies: SerializedBody[]) => {
   const initialized: SerializedBody[] = [];
-  const canvasIds = bodies.map((body) => body.canvasId);
 
   World.clear(world, false);
   bodiesMap.clear();
@@ -256,14 +266,11 @@ const initialize = async (bodies: SerializedBody[]) => {
 
   hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
   initialState = initialized;
+  previewQueued = true;
   postMessage({
     action: "initialize",
     bodies: initialState,
   });
-  if (performance.now() - lastPreviewTime > 100 && !previewing && !noPreview) {
-    lastPreviewTime = performance.now();
-    await renderPreview();
-  }
 };
 
 Events.on(engine, "collisionStart", (event) => {
@@ -290,11 +297,12 @@ Events.on(engine, "collisionEnd", (event) => {
     ) {
       const marble = pair.bodyA.label === "marble" ? pair.bodyA : pair.bodyB;
       const block = pair.bodyA.label === "marble" ? pair.bodyB : pair.bodyA;
+      const collisionNormalInverter = pair.bodyA.label === "marble" ? 1 : -1;
       if (alreadyCalculated.includes(block)) continue;
-      const newVelocity = Vector.add(marble.velocity, {
-        x: 0,
-        y: marble.velocity.y < 0 ? marble.velocity.y * BOUNCY_BLOCK_FACTOR : 0,
-      });
+      const collisionNormal = Vector.mult(pair.collision.normal, collisionNormalInverter);
+
+      const velocityToAdd = Vector.mult(collisionNormal, BOUNCY_BLOCK_FACTOR);
+      const newVelocity = Vector.add(marble.velocity, velocityToAdd);
       Body.setVelocity(marble, newVelocity);
       alreadyCalculated.push(block);
     }
@@ -328,6 +336,10 @@ addEventListener("message", async (event: PhysicsMessageEvent) => {
     noPreview = false;
 
     initialize(data.bodies);
+  }
+
+  if (data.action === "update preview") {
+    previewQueued = true;
   }
 
   if (data.action === "update") {

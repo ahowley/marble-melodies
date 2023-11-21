@@ -3,6 +3,7 @@ import { createDroppable } from "@thisbeyond/solid-dnd";
 import { WorkspaceEditor, GameState } from "../../game/canvas";
 import { Playback } from "../playback/Playback";
 import "./Editor.scss";
+import { SerializedBody } from "../../game/physics";
 
 type EditorProps = {
   editor: Accessor<WorkspaceEditor | undefined>;
@@ -32,27 +33,61 @@ export const Editor: Component<EditorProps> = (props) => {
     setStopped(true);
   };
 
+  const handleDelete = () => {
+    const bodiesToDelete = props
+      .editor()
+      ?.transformer.nodes()
+      .map((node) => node.id());
+    if (bodiesToDelete?.length) {
+      props.editor()?.transformer.nodes([]);
+      const newState = (props.editor()?.initialState as SerializedBody[])?.filter(
+        (body) => !bodiesToDelete.includes(body.canvasId),
+      );
+      if (newState) {
+        props.editor()?.initialize(newState);
+      }
+    }
+  };
+
   const editorStopCallback = () => {
     setPlaying(false);
   };
 
+  const resizeListener = () => {
+    props.editor()?.sizeToContainer();
+  };
+
+  const pointerDownListener = (event: PointerEvent) => {
+    if (!(event.target instanceof HTMLCanvasElement)) {
+      props.editor()?.transformer.nodes([]);
+    }
+  };
+
+  const keyUpListener = (event: KeyboardEvent) => {
+    if (event.key === "Backspace" || event.key === "Delete") {
+      console.log("deleting");
+      handleDelete();
+    }
+    if (event.key === " " || event.key === "Enter") {
+      console.log("play/pausing");
+      togglePlay();
+    }
+    if (event.key === "Escape") {
+      console.log("stopping");
+      handleStop();
+    }
+  };
+
   onMount(() => {
     props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
-
-    const resizeListener = () => {
-      props.editor()?.sizeToContainer();
-    };
-    const pointerDownListener = (event: PointerEvent) => {
-      if (!(event.target instanceof HTMLCanvasElement)) {
-        props.editor()?.transformer.nodes([]);
-      }
-    };
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);
+    document.addEventListener("keyup", keyUpListener);
 
     onCleanup(() => {
       removeEventListener("resize", resizeListener);
       removeEventListener("pointerdown", pointerDownListener);
+      document.removeEventListener("keyup", keyUpListener);
     });
   });
 

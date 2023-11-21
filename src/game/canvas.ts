@@ -106,8 +106,8 @@ class Marble extends Konva.Circle {
 }
 
 class TrackBlock extends Konva.Rect {
-  static xOffset = 5;
-  static yOffset = -5;
+  static xOffset = 10;
+  static yOffset = -10;
   workspace: WorkspaceEditor;
   backTrack: Konva.Rect;
   physicsId?: number;
@@ -324,7 +324,6 @@ export class WorkspaceEditor {
   renderedFrames: Frame[];
   previewFrames: Frame[];
   stage: Konva.Stage;
-  stageOffset: { offsetX: number; offsetY: number };
   backgroundLayer: Konva.Layer;
   interactLayer: Konva.Layer;
   transformer: Konva.Transformer;
@@ -345,6 +344,7 @@ export class WorkspaceEditor {
   previousDrawTime: number;
   disableTransformer: boolean;
   needsPreviewUpdate: boolean;
+  previewOnPlayback: boolean;
 
   constructor(
     container: HTMLDivElement,
@@ -363,15 +363,12 @@ export class WorkspaceEditor {
       container: this.container,
       draggable: true,
     });
-    this.stageOffset = {
-      offsetX: 0,
-      offsetY: 0,
-    };
     this.sizeToContainer();
     this.playing = false;
     this.stopCallback = stopCallback;
     this.disableTransformer = false;
     this.needsPreviewUpdate = false;
+    this.previewOnPlayback = true;
     this.previousDrawTime = 0;
 
     this.backgroundLayer = new Konva.Layer({
@@ -381,7 +378,6 @@ export class WorkspaceEditor {
     this.transformer = new Konva.Transformer({
       enabledAnchors: ["middle-left", "middle-right", "top-center", "bottom-center"],
       flipEnabled: false,
-      centeredScaling: true,
     });
     this.selection = new Konva.Rect({
       fill: "rgba(0, 0, 200, 0.5)",
@@ -481,7 +477,6 @@ export class WorkspaceEditor {
 
   recenter() {
     this.stage.position({ x: 0, y: 0 });
-    this.stageOffset = { offsetX: 0, offsetY: 0 };
   }
 
   listenForPointerEvents() {
@@ -519,13 +514,13 @@ export class WorkspaceEditor {
       this.selectionTap(event);
     });
 
-    this.stage.on("pointerup", (event) => {
-      return (this.stageOffset = { offsetX: event.target.x(), offsetY: event.target.y() });
-    });
-
     this.stage.on("dblclick dbltap", (event) => {
       if (event.target !== this.stage) return;
       this.recenter();
+    });
+
+    this.transformer.on("transformend", () => {
+      this.needsPreviewUpdate = true;
     });
   }
 
@@ -608,7 +603,9 @@ export class WorkspaceEditor {
       bodies: this.initialState,
     });
     this.physicsBusy = true;
-    this.removePreviewLines();
+    if (!this.previewOnPlayback) {
+      this.removePreviewLines();
+    }
   }
 
   cleanup() {
@@ -679,7 +676,9 @@ export class WorkspaceEditor {
           bodies: this.initialState,
         });
       } else {
-        this.needsPreviewUpdate = true;
+        this.physics.postMessage({
+          action: "update preview",
+        });
       }
       this.physicsBusy = true;
     }
