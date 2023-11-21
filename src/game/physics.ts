@@ -1,10 +1,11 @@
 import { Engine, Body, Bodies, Composite, Events, Vector, World } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT } from "./config";
 
+export type BlockTypes = "marble" | "track-block" | "note-block";
 export type SerializedBody = {
   canvasId: string;
   physicsId?: number;
-  type?: "marble" | "track-block" | "note-block";
+  type?: BlockTypes;
   x: number;
   y: number;
   rotation: number;

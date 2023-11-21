@@ -1,0 +1,38 @@
+@use "../../styles/util" as *;
+
+.toolbar {
+  position: absolute;
+  inset: auto 1rem 0;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  background-color: transparent;
+  transition: background-color 0.2s ease-out;
+
+  .summary {
+    width: fit-content;
+    margin: auto;
+    padding: 1rem;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: #{color("background-dark")};
+  }
+  .bodies {
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    gap: 1rem;
+    height: 10rem;
+    max-height: 0rem;
+    transition: max-height 0.2s ease-out;
+  }
+  &.open {
+    background-color: #{color("background-dark")};
+
+    .bodies {
+      max-height: 10rem;
+    }
+  }
+}

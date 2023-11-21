@@ -1,5 +1,5 @@
 import { ParentComponent } from "solid-js";
-import { createDraggable, transformStyle, useDragDropContext } from "@thisbeyond/solid-dnd";
+import { createDraggable, transformStyle } from "@thisbeyond/solid-dnd";
 import "./DraggableBody.scss";
 
 type DraggableProps = {

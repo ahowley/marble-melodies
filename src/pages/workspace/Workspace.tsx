@@ -7,8 +7,8 @@ import {
   DragEventHandler,
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
-import { DraggableBody } from "../../components/draggable/DraggableBody";
 import { GameState } from "../../game/canvas";
+import { Toolbar } from "../../components/toolbar/Toolbar";
 import "./Workspace.scss";
 
 export const Workspace: Component = () => {
@@ -102,10 +102,8 @@ export const Workspace: Component = () => {
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
       <DragDropSensors />
       <Editor initialState={initialState} handleSave={handleSave} />
-      <DragOverlay>
-        {(draggable) => <div class={`${draggable ? draggable.id : ""}`}>{draggable?.id}</div>}
-      </DragOverlay>
-      <DraggableBody id="circle" />
+      <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
+      <Toolbar />
     </DragDropProvider>
   );
 };
