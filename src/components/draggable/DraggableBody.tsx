@@ -3,7 +3,7 @@ import { createDraggable, transformStyle, useDragDropContext } from "@thisbeyond
 import "./DraggableBody.scss";
 
 type DraggableProps = {
-  id: number;
+  id: string | number;
 };
 export const DraggableBody: ParentComponent<DraggableProps> = (props) => {
   const draggable = createDraggable(props.id);

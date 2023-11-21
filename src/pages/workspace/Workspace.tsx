@@ -1,6 +1,11 @@
-import { createSignal, type Component } from "solid-js";
+import { type Component } from "solid-js";
 import { createStore } from "solid-js/store";
-import { DragDropProvider, DragDropSensors, DragOverlay, DragEventHandler } from "@thisbeyond/solid-dnd";
+import {
+  DragDropProvider,
+  DragDropSensors,
+  DragOverlay,
+  DragEventHandler,
+} from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
 import { DraggableBody } from "../../components/draggable/DraggableBody";
 import { GameState } from "../../game/canvas";
@@ -77,8 +82,8 @@ export const Workspace: Component = () => {
       gradientEnd: "darkred",
     },
   ]);
-  let transform = { x: 0, y: 0 };
 
+  let transform = { x: 0, y: 0 };
   const onDragMove: DragEventHandler = ({ overlay }) => {
     if (overlay) {
       transform = { ...overlay.transform };
@@ -97,8 +102,10 @@ export const Workspace: Component = () => {
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
       <DragDropSensors />
       <Editor initialState={initialState} handleSave={handleSave} />
-      <DragOverlay class="drag-overlay">{(draggable) => <div class={(console.log(draggable), "")}></div>}</DragOverlay>
-      <DraggableBody id={1} />
+      <DragOverlay>
+        {(draggable) => <div class={`${draggable ? draggable.id : ""}`}>{draggable?.id}</div>}
+      </DragOverlay>
+      <DraggableBody id="circle" />
     </DragDropProvider>
   );
 };

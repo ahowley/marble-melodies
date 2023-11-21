@@ -52,7 +52,11 @@ export const Editor: Component<EditorProps> = (props) => {
       classList={{ "!droppable-accept": droppable.isActiveDroppable }}
     >
       <Playback playing={playing} togglePlay={togglePlay} handleStop={handleStop} />
-      <div class="konva-container" ref={container!} onContextMenu={(event) => event.preventDefault()} />
+      <div
+        class="konva-container"
+        ref={container!}
+        onContextMenu={(event) => event.preventDefault()}
+      />
     </main>
   );
 };

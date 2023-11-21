@@ -14,7 +14,7 @@
   "htmlWhitespaceSensitivity": "css",
   "overrides": [
     {
-      "files": "*.jsx",
+      "files": "*.tsx",
       "options": {
         "printWidth": 100
       }
