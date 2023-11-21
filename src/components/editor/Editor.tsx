@@ -63,6 +63,22 @@ export const Editor: Component<EditorProps> = (props) => {
     }
   };
 
+  const pointerMoveListener = (event: PointerEvent) => {
+    const draggingBodies = props.editor()?.draggingBodies;
+    if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
+      draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));
+      props.editor()?.initialize();
+    }
+  };
+
+  const pointerUpListener = (event: PointerEvent) => {
+    const draggingBodies = props.editor()?.draggingBodies;
+    if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
+      draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));
+      props.editor()?.initialize();
+    }
+  };
+
   const keyUpListener = (event: KeyboardEvent) => {
     if (event.key === "Backspace" || event.key === "Delete") {
       console.log("deleting");
@@ -82,11 +98,15 @@ export const Editor: Component<EditorProps> = (props) => {
     props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);
+    addEventListener("pointermove", pointerMoveListener);
+    addEventListener("pointerup", pointerUpListener);
     document.addEventListener("keyup", keyUpListener);
 
     onCleanup(() => {
       removeEventListener("resize", resizeListener);
       removeEventListener("pointerdown", pointerDownListener);
+      removeEventListener("pointermove", pointerMoveListener);
+      removeEventListener("pointerup", pointerUpListener);
       document.removeEventListener("keyup", keyUpListener);
     });
   });

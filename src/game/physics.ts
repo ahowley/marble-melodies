@@ -119,17 +119,14 @@ const getNextFrame = (preview = false): Frame => {
 };
 
 const renderPreview = async () => {
-  console.log("rendering preview");
   postMessage({
     action: "clear preview",
   });
 
-  let previewFrameCount = PREVIEW_FRAME_COUNT;
-  let cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT;
   const previewFrames: Frame[] = [];
-  for (let i = 0; i < previewFrameCount; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
+  for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE * CACHES_PER_PREVIEW_POINT) {
     lastPreviewTime = performance.now();
-    for (let j = 0; j < FRAME_CACHE_SIZE * cachesPerPreviewPoint; j++) {
+    for (let j = 0; j < FRAME_CACHE_SIZE * CACHES_PER_PREVIEW_POINT; j++) {
       if (j === 0) {
         const frame = getNextFrame(true);
         previewFrames.push(frame);
@@ -142,13 +139,13 @@ const renderPreview = async () => {
 };
 
 setInterval(async () => {
-  if (performance.now() - lastPreviewTime > 100 && !previewing && !noPreview && previewQueued) {
+  if (performance.now() - lastPreviewTime > 60 && !previewing && !noPreview && previewQueued) {
     previewing = true;
     previewQueued = false;
     await renderPreview();
     previewing = false;
   }
-}, 100);
+}, 60);
 
 const update = (lastFramePassed = false) => {
   if (lastFramePassed) {
@@ -200,7 +197,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
     isStatic: rectangle.isStatic ? true : false,
     angle: rectangle.rotation,
     restitution: isTrack ? 0 : 1,
-    friction: isTrack ? 0.2 : 0,
+    friction: isTrack ? 0.1 : 0,
     label: isTrack ? "track-block" : "note-block",
   });
 
@@ -210,14 +207,6 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
 
   return getSerializedBody(rectangleBody);
 };
-
-// const createAndAddLowerBoundary = () => {
-//   const boundary = Bodies.rectangle(0, 2000, 10000, 100, {
-//     isStatic: true,
-//     label: "boundary",
-//   });
-//   Composite.add(world, boundary);
-// };
 
 const initializeBody = (body: SerializedBody) => {
   const physicsBody = bodiesMap.get(body.canvasId);
@@ -257,7 +246,6 @@ const initialize = async (bodies: SerializedBody[]) => {
   bodiesMap.clear();
   physicsToCanvasMap.clear();
 
-  // createAndAddLowerBoundary();
   for (let i = 0; i < bodies.length; i++) {
     const serializedBody = initializeBody(bodies[i]);
     serializedBody && initialized.push(serializedBody);

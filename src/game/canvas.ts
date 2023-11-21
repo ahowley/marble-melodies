@@ -61,9 +61,12 @@ class Marble extends Konva.Circle {
     this.workspace.addBody(this);
     this.initialState = this.serialize();
 
+    this.on("dragstart", () => {
+      this.workspace.draggingBodies.push(this);
+    });
     this.on("dragend", () => {
-      this.initialState = this.serialize();
-      this.workspace.initialize();
+      this.workspace.draggingBodies = [];
+      this.workspace.needsPreviewUpdate = true;
     });
     this.on("transform", () => {
       this.skewX(0);
@@ -167,9 +170,12 @@ class TrackBlock extends Konva.Rect {
     this.workspace.addBody(this);
     this.initialState = this.serialize();
 
+    this.on("dragstart", () => {
+      this.workspace.draggingBodies.push(this);
+    });
     this.on("dragend", () => {
-      this.initialState = this.serialize();
-      this.workspace.initialize();
+      this.workspace.draggingBodies = [];
+      this.workspace.needsPreviewUpdate = true;
     });
     this.on("transform", () => {
       this.backTrack.x(this.x() + TrackBlock.xOffset * this.scaleX());
@@ -273,9 +279,12 @@ class NoteBlock extends Konva.Rect {
     this.workspace.addBody(this);
     this.initialState = this.serialize();
 
+    this.on("dragstart", () => {
+      this.workspace.draggingBodies.push(this);
+    });
     this.on("dragend", () => {
-      this.initialState = this.serialize();
-      this.workspace.initialize();
+      this.workspace.draggingBodies = [];
+      this.workspace.needsPreviewUpdate = true;
     });
     this.on("transform", () => {
       this.width(this.width() * this.scaleX());
@@ -337,6 +346,7 @@ export class WorkspaceEditor {
   };
   bodies: Body[];
   bodiesMap: Map<string, Body>;
+  draggingBodies: Body[];
   physics: Worker;
   physicsBusy: boolean;
   playing: boolean;
@@ -356,6 +366,7 @@ export class WorkspaceEditor {
     this.physicsBusy = false;
     this.bodies = [];
     this.bodiesMap = new Map();
+    this.draggingBodies = [];
     this.unrenderedFrames = [];
     this.renderedFrames = [];
     this.previewFrames = [];
@@ -413,7 +424,6 @@ export class WorkspaceEditor {
   selectionStart(event: KonvaEventObject<MouseEvent>) {
     const pointerPosition = this.stage.getRelativePointerPosition();
     if (!pointerPosition) return;
-    event.evt.preventDefault();
     this.stage.draggable(false);
     this.selectionVertices = {
       x1: pointerPosition.x,
@@ -430,7 +440,6 @@ export class WorkspaceEditor {
     const pointerPosition = this.stage.getRelativePointerPosition();
     if (!pointerPosition) return;
 
-    event.evt.preventDefault();
     this.selectionVertices.x2 = pointerPosition.x;
     this.selectionVertices.y2 = pointerPosition.y;
 
@@ -444,7 +453,6 @@ export class WorkspaceEditor {
   }
 
   selectionEnd(event: KonvaEventObject<any>) {
-    event.evt.preventDefault();
     this.selection.visible(false);
     if (this.selection.width() < 5 || this.selection.height() < 5) {
       return;
