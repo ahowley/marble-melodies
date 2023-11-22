@@ -50,7 +50,7 @@
     height: 10rem;
     max-height: 0rem;
     padding: 0 1rem;
-    background-color: transparent;
+    background-color: #{color("secondary-dark")};
     transition:
       max-height 0.2s ease-out,
       background-color 0.2s ease-out;
@@ -64,7 +64,6 @@
 
   &.open {
     .content {
-      background-color: #{color("secondary-dark")};
       max-height: 10rem;
       @include tablet {
         max-height: 5rem;
