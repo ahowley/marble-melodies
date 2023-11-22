@@ -1,4 +1,5 @@
 import "./App.scss";
+import { GameProvider } from "./components/game_context/GameContext";
 import { Header } from "./components/header/Header";
 import { Workspace } from "./pages/workspace/Workspace";
 
@@ -8,7 +9,9 @@ export const App: Component = () => {
   return (
     <>
       <Header />
-      <Workspace />
+      <GameProvider>
+        <Workspace />
+      </GameProvider>
     </>
   );
 };

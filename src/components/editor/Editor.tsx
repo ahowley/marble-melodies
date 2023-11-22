@@ -11,15 +11,19 @@ type EditorProps = {
   setEditor: Setter<WorkspaceEditor | undefined>;
   initialState: GameState;
   handleSave: (newState: GameState) => void;
+  closeToolbar: () => void;
 };
 
 export const Editor: Component<EditorProps> = (props) => {
   const {
     playing: [playing, setPlaying],
     stopped: [stopped, setStopped],
-    singleBodySelected: [singleBodySelected, setSingleBodySelected],
+    singleBodySelected: [_singleBodySelected, setSingleBodySelected],
+    openState: [openState, _setOpenState],
+    selectedTab: [selectedTab, _setSelectedTab],
   } = useGameContext();
-  const droppable = createDroppable(1);
+  const droppable = createDroppable(0);
+  let tabs: HTMLElement[] = [];
   let container: HTMLDivElement;
 
   const saveStateToLocalStorage = () => {
@@ -94,6 +98,13 @@ export const Editor: Component<EditorProps> = (props) => {
       } else {
         setSingleBodySelected(null);
       }
+      if (
+        openState() === "open" &&
+        selectedTab() === 1 &&
+        !props.editor()?.transformer.nodes().length
+      ) {
+        props.closeToolbar();
+      }
     });
 
     const draggingBodies = props.editor()?.draggingBodies;
@@ -119,6 +130,7 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   onMount(() => {
+    tabs = [...(document.querySelector(".toolbar .summary")?.children || [])] as HTMLElement[];
     props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);

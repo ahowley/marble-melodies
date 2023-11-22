@@ -8,7 +8,7 @@ import {
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
-import { GameProvider } from "../../components/game_context/GameContext";
+import { useGameContext } from "../../components/game_context/GameContext";
 import { GameState, WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
@@ -18,6 +18,36 @@ export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
   const [editor, setEditor] = createSignal<WorkspaceEditor>();
   const [initialState, setInitialState] = createStore<GameState>([]);
+  const {
+    openState: [_openState, setOpenState],
+    selectedTab: [selectedTab, setSelectedTab],
+  } = useGameContext();
+  let details: HTMLDetailsElement;
+
+  const closeToolbar = () => {
+    setOpenState("closing");
+    setTimeout(() => {
+      setOpenState("closed");
+    }, 200);
+  };
+
+  const toggleToolbarOpen = (event: MouseEvent) => {
+    event.preventDefault();
+    const tabClicked = event.target as HTMLElement | null;
+    const parentNode = tabClicked?.parentNode;
+    if (!parentNode) return;
+
+    const lastOpenTab = selectedTab();
+    setSelectedTab([...parentNode.children].findIndex((child) => child === tabClicked));
+    if (details.open && lastOpenTab === selectedTab()) {
+      setOpenState("closing");
+      setTimeout(() => {
+        closeToolbar();
+      }, 200);
+    } else {
+      setOpenState("open");
+    }
+  };
 
   const onDragMove: DragEventHandler = ({ overlay }) => {
     if (overlay) {
@@ -82,20 +112,17 @@ export const Workspace: Component = () => {
   });
 
   return (
-    <GameProvider>
-      <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
-        <DragDropSensors />
-        <Editor
-          initialState={initialState}
-          handleSave={handleSave}
-          editor={editor}
-          setEditor={setEditor}
-        />
-        <DragOverlay>
-          {(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}
-        </DragOverlay>
-        <Toolbar />
-      </DragDropProvider>
-    </GameProvider>
+    <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
+      <DragDropSensors />
+      <Editor
+        initialState={initialState}
+        handleSave={handleSave}
+        editor={editor}
+        setEditor={setEditor}
+        closeToolbar={closeToolbar}
+      />
+      <Toolbar ref={details!} toggleToolbarOpen={toggleToolbarOpen} />
+      <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
+    </DragDropProvider>
   );
 };
