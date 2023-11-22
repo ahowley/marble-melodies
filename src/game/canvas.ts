@@ -5,7 +5,7 @@ import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
-import { COLORS, DELTA, FRAME_CACHE_SIZE, PREVIEW_FRAME_COUNT } from "./config";
+import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
 type Body = Marble | TrackBlock | NoteBlock;
@@ -361,6 +361,7 @@ export class WorkspaceEditor {
     stopCallback: () => void,
     initialState: Omit<SerializedBody, "canvasId">[] = [],
   ) {
+    Konva.dragButtons = [0];
     this.container = container;
     this.physics = new Worker("./src/game/physics.ts", { type: "module" });
     this.physicsBusy = false;
@@ -388,10 +389,20 @@ export class WorkspaceEditor {
     this.interactLayer = new Konva.Layer();
     this.transformer = new Konva.Transformer({
       enabledAnchors: ["middle-left", "middle-right", "top-center", "bottom-center"],
+      anchorStroke: COLORS.accentLight,
+      anchorStrokeWidth: 2,
+      anchorFill: COLORS.highlight,
+      anchorSize: 15,
+      anchorCornerRadius: 5,
+      borderStroke: COLORS.accentDark,
+      borderStrokeWidth: 2,
+      borderDash: [5, 5],
       flipEnabled: false,
     });
     this.selection = new Konva.Rect({
-      fill: "rgba(0, 0, 200, 0.5)",
+      fill: COLORS.accentSecondaryDark,
+      opacity: 0.3,
+      cornerRadius: 5,
       visible: false,
     });
     this.previewLines = new Map();
@@ -467,6 +478,7 @@ export class WorkspaceEditor {
     if (
       !this.bodies.includes(event.target as Body) ||
       this.transformer.nodes().includes(event.target) ||
+      event.evt.button !== 0 ||
       event.target === this.stage
     ) {
       return;
@@ -489,7 +501,9 @@ export class WorkspaceEditor {
 
   listenForPointerEvents() {
     this.stage.on("mousedown", (event) => {
-      if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
+      if (this.playing || this.disableTransformer) {
+        return this.transformer.nodes([]);
+      }
       if (event.target !== this.stage) return this.stage.draggable(false);
       if (event.evt.button !== 2) return;
 
@@ -525,6 +539,29 @@ export class WorkspaceEditor {
     this.stage.on("dblclick dbltap", (event) => {
       if (event.target !== this.stage) return;
       this.recenter();
+    });
+
+    this.stage.on("wheel", (event) => {
+      event.evt.preventDefault();
+
+      const oldScale = this.stage.scaleX();
+      const pointer = this.stage.getPointerPosition();
+      if (!pointer) return;
+
+      const mousePointTo = {
+        x: (pointer.x - this.stage.x()) / oldScale,
+        y: (pointer.y - this.stage.y()) / oldScale,
+      };
+
+      const direction = event.evt.deltaY > 0 ? -1 : 1;
+      const newScale = direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
+      this.stage.scale({ x: newScale, y: newScale });
+
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      this.stage.position(newPos);
     });
 
     this.transformer.on("transformend", () => {
@@ -751,7 +788,7 @@ export class WorkspaceEditor {
   }
 
   draw(self: WorkspaceEditor, time: number, firstCall = false) {
-    const delta = firstCall ? time : time - self.previousDrawTime;
+    const delta = firstCall ? DELTA : time - self.previousDrawTime;
     self.previousDrawTime = time;
     if (!self.playing) return;
 

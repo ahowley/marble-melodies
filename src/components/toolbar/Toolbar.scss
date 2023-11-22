@@ -2,6 +2,7 @@
 
 .toolbar {
   position: absolute;
+  z-index: 1;
   inset: auto 1rem 0;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
@@ -16,6 +17,7 @@
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     background-color: #{color("background-dark")};
+    cursor: pointer;
   }
   .bodies {
     overflow: hidden;

@@ -12,5 +12,9 @@
     position: relative;
     z-index: 10;
     display: grid;
+
+    &.hidden {
+      display: none;
+    }
   }
 }

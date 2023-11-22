@@ -3,6 +3,8 @@ export const DELTA = 1000 / FRAME_CACHE_SIZE;
 export const CACHES_PER_PREVIEW_POINT = 2 / FRAME_CACHE_SIZE;
 export const PREVIEW_FRAME_COUNT = 10000;
 
+export const SCALE_BY = 1.03;
+export const SCALE_BY_TOUCH = 1.01;
 export const BOUNCY_BLOCK_FACTOR = 10;
 
 export const COLORS = {

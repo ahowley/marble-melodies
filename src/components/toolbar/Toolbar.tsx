@@ -27,7 +27,7 @@ export const Toolbar: Component = (props) => {
           }
         }}
       >
-        Toolbar
+        Drag + Drop Marbles & Blocks
       </summary>
 
       <div class="bodies">

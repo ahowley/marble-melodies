@@ -127,8 +127,8 @@ export const Editor: Component<EditorProps> = (props) => {
       classList={{ "!droppable-accept": droppable.isActiveDroppable }}
     >
       <Playback
-        playing={playing}
-        stopped={stopped}
+        playing={playing()}
+        stopped={stopped()}
         togglePlay={togglePlay}
         handleStop={handleStop}
       />
