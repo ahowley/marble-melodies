@@ -13,7 +13,7 @@ type ToolbarProps = {
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
   const {
-    playing: [playing, _setPlaying],
+    stopped: [stopped, _setStopped],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
     openState: [openState, _setOpenState],
     selectedTab: [selectedTab, _setSelectedTab],
@@ -21,7 +21,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   return (
     <details
-      class={`toolbar ${openState() === "open" ? "open" : "closed"} ${playing() ? "hidden" : ""}`}
+      class={`toolbar ${openState() === "open" ? "open" : "closed"} ${!stopped() ? "hidden" : ""}`}
       open={["open", "closing"].includes(openState())}
       ref={props.ref!}
     >

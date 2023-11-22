@@ -23,7 +23,6 @@ export const Editor: Component<EditorProps> = (props) => {
     selectedTab: [selectedTab, _setSelectedTab],
   } = useGameContext();
   const droppable = createDroppable(0);
-  let tabs: HTMLElement[] = [];
   let container: HTMLDivElement;
 
   const saveStateToLocalStorage = () => {
@@ -116,21 +115,17 @@ export const Editor: Component<EditorProps> = (props) => {
 
   const keyUpListener = (event: KeyboardEvent) => {
     if (event.key === "Backspace" || event.key === "Delete") {
-      console.log("deleting");
       handleDelete();
     }
     if (event.key === " " || event.key === "Enter") {
-      console.log("play/pausing");
       togglePlay();
     }
     if (event.key === "Escape") {
-      console.log("stopping");
       handleStop();
     }
   };
 
   onMount(() => {
-    tabs = [...(document.querySelector(".toolbar .summary")?.children || [])] as HTMLElement[];
     props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);
