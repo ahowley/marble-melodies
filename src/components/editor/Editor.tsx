@@ -26,6 +26,7 @@ export const Editor: Component<EditorProps> = (props) => {
   } = useGameContext();
   const droppable = createDroppable(0);
   let container: HTMLDivElement;
+  let interactableElements: Element[] = [];
 
   const togglePlay = () => {
     if (playing()) {
@@ -68,9 +69,17 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   const pointerDownListener = (event: PointerEvent) => {
+    const element = event.target as Element;
+
+    if (!interactableElements.length) {
+      const toolbar = document.querySelector(".toolbar");
+      toolbar && interactableElements.push(...(toolbar.querySelectorAll("*") || []));
+    }
+
     if (
       !(event.target instanceof HTMLCanvasElement) &&
-      !(event.target instanceof HTMLButtonElement)
+      !(event.target instanceof HTMLButtonElement) &&
+      !interactableElements.includes(element)
     ) {
       props.editor()?.transformer.nodes([]);
     }
