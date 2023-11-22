@@ -39,6 +39,7 @@
       transition:
         padding 0.2s ease-out,
         max-height 0.2s ease-out;
+      overflow: hidden;
 
       &.hidden {
         display: none;
@@ -57,6 +58,7 @@
     border-top: 1px solid #{color("highlight")};
     border-left: 1px solid #{color("highlight")};
     border-right: 1px solid #{color("highlight")};
+    max-height: 0;
     padding: 0 1rem;
     background-color: #{color("secondary-dark")};
     border-top-left-radius: 5px;
@@ -65,20 +67,20 @@
       max-height 0.2s ease-out,
       background-color 0.2s ease-out;
 
-    &.bodies {
+    &.bodies,
+    &.edit {
       height: 10rem;
-      max-height: 0rem;
-      @include tablet {
-        height: 5rem;
-      }
     }
   }
 
   &.open {
     .content {
-      max-height: 10rem;
-      @include tablet {
-        max-height: 5rem;
+      &.bodies {
+        height: 10rem;
+        max-height: 10rem;
+        @include tablet {
+          max-height: 5rem;
+        }
       }
 
       &.edit {
@@ -90,7 +92,6 @@
       &:not(.selected) {
         max-height: 5px;
         color: transparent;
-        overflow: hidden;
         @include tablet {
           max-height: 2.25rem;
           color: inherit;
@@ -99,7 +100,7 @@
       &.selected {
         background: linear-gradient(180deg, #{color("secondary")}, #{color("secondary-dark")} 50%);
         @include tablet {
-          max-height: 2.5rem;
+          max-height: 2.25rem;
         }
       }
     }
