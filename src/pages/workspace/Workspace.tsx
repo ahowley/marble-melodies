@@ -1,4 +1,4 @@
-import { createSignal, type Component } from "solid-js";
+import { createSignal, type Component, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import {
   DragDropProvider,
@@ -67,6 +67,14 @@ export const Workspace: Component = () => {
   const handleSave = (newState: GameState) => {
     setInitialState(newState);
   };
+
+  onMount(() => {
+    const savedStateJSON = localStorage.getItem("lastTrackState");
+    const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
+    if (savedState) {
+      setInitialState(savedState);
+    }
+  });
 
   return (
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>

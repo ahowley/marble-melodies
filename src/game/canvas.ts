@@ -421,7 +421,7 @@ export class WorkspaceEditor {
     });
   }
 
-  selectionStart(event: KonvaEventObject<MouseEvent>) {
+  selectionStart(_event: KonvaEventObject<MouseEvent>) {
     const pointerPosition = this.stage.getRelativePointerPosition();
     if (!pointerPosition) return;
     this.stage.draggable(false);
@@ -436,7 +436,7 @@ export class WorkspaceEditor {
     this.selection.visible(true);
   }
 
-  selectionDrag(event: KonvaEventObject<MouseEvent>) {
+  selectionDrag(_event: KonvaEventObject<MouseEvent>) {
     const pointerPosition = this.stage.getRelativePointerPosition();
     if (!pointerPosition) return;
 
@@ -452,7 +452,7 @@ export class WorkspaceEditor {
     });
   }
 
-  selectionEnd(event: KonvaEventObject<any>) {
+  selectionEnd(_event: KonvaEventObject<any>) {
     this.selection.visible(false);
     if (this.selection.width() < 5 || this.selection.height() < 5) {
       return;
@@ -491,7 +491,7 @@ export class WorkspaceEditor {
     this.stage.on("mousedown", (event) => {
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (event.target !== this.stage) return this.stage.draggable(false);
-      if (event.evt.button !== 0) return;
+      if (event.evt.button !== 2) return;
 
       this.selectionStart(event);
     });

@@ -18,12 +18,20 @@ export const Editor: Component<EditorProps> = (props) => {
   const droppable = createDroppable(1);
   let container: HTMLDivElement;
 
+  const saveStateToLocalStorage = () => {
+    const initialState = props.editor()?.initialState;
+    if (initialState?.length) {
+      localStorage.setItem("lastTrackState", JSON.stringify(initialState));
+    }
+  };
+
   const togglePlay = () => {
     if (playing()) {
       props.editor()?.pause(props.editor() as WorkspaceEditor);
     } else {
       props.editor()?.play(props.editor() as WorkspaceEditor);
       setStopped(false);
+      saveStateToLocalStorage();
     }
     setPlaying(!playing());
   };
@@ -31,6 +39,10 @@ export const Editor: Component<EditorProps> = (props) => {
   const handleStop = () => {
     props.editor()?.stop(props.editor() as WorkspaceEditor);
     setStopped(true);
+  };
+
+  const editorStopCallback = () => {
+    setPlaying(false);
   };
 
   const handleDelete = () => {
@@ -47,10 +59,6 @@ export const Editor: Component<EditorProps> = (props) => {
         props.editor()?.initialize(newState);
       }
     }
-  };
-
-  const editorStopCallback = () => {
-    setPlaying(false);
   };
 
   const resizeListener = () => {
