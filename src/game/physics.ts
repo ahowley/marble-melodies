@@ -123,10 +123,12 @@ const renderPreview = async () => {
     action: "clear preview",
   });
 
+  const numberOfMarbles = world.bodies.reduce((a, c) => (c.label === "marble" ? a + 1 : a), 0);
+  const cachesPerPreviewPoint = CACHES_PER_PREVIEW_POINT(numberOfMarbles);
   const previewFrames: Frame[] = [];
-  for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE * CACHES_PER_PREVIEW_POINT) {
+  for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
     lastPreviewTime = performance.now();
-    for (let j = 0; j < FRAME_CACHE_SIZE * CACHES_PER_PREVIEW_POINT; j++) {
+    for (let j = 0; j < FRAME_CACHE_SIZE * cachesPerPreviewPoint; j++) {
       if (j === 0) {
         const frame = getNextFrame(true);
         previewFrames.push(frame);

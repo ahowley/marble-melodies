@@ -1,4 +1,4 @@
-import { Component, JSX, createSignal } from "solid-js";
+import { Component, createSignal } from "solid-js";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
 import "./Toolbar.scss";
@@ -6,6 +6,25 @@ import "./Toolbar.scss";
 export const Toolbar: Component = (props) => {
   let details: HTMLDetailsElement;
   let [openState, setOpenState] = createSignal<"open" | "closing" | "closed">("closed");
+  let [selectedTab, setSelectedTab] = createSignal(0);
+
+  const handleOpen = (event: MouseEvent) => {
+    event.preventDefault();
+    const tabClicked = event.target as HTMLElement | null;
+    const parentNode = tabClicked?.parentNode;
+    if (!parentNode) return;
+
+    const lastOpenTab = selectedTab();
+    setSelectedTab([...parentNode.children].findIndex((child) => child === tabClicked));
+    if (details.open && lastOpenTab === selectedTab()) {
+      setOpenState("closing");
+      setTimeout(() => {
+        setOpenState("closed");
+      }, 200);
+    } else {
+      setOpenState("open");
+    }
+  };
 
   return (
     <details
@@ -13,24 +32,19 @@ export const Toolbar: Component = (props) => {
       open={["open", "closing"].includes(openState())}
       ref={details!}
     >
-      <summary
-        class="summary"
-        onClick={(event) => {
-          event.preventDefault();
-          if (details.open) {
-            setOpenState("closing");
-            setTimeout(() => {
-              setOpenState("closed");
-            }, 200);
-          } else {
-            setOpenState("open");
-          }
-        }}
-      >
-        Drag + Drop Marbles & Blocks
+      <summary class="summary">
+        <button onClick={handleOpen} class={`tab ${selectedTab() === 0 ? "selected" : ""}`}>
+          Drag + Drop
+        </button>
+        <button onClick={handleOpen} class={`tab ${selectedTab() === 1 ? "selected" : ""}`}>
+          Options
+        </button>
+        <button onClick={handleOpen} class={`tab ${selectedTab() === 2 ? "selected" : ""}`}>
+          Settings
+        </button>
       </summary>
 
-      <div class="bodies">
+      <div class="content">
         <DraggableBody id="marble">
           <Shape type="marble" />
         </DraggableBody>

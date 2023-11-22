@@ -2,24 +2,41 @@
 
 .toolbar {
   position: absolute;
-  z-index: 1;
   inset: auto 1rem 0;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  background-color: transparent;
-  transition: background-color 0.2s ease-out;
   user-select: none;
+  overflow: hidden;
+  @include tablet {
+    width: fit-content;
+  }
 
   .summary {
-    width: fit-content;
-    margin: auto;
-    padding: 1rem;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    background-color: #{color("background-dark")};
-    cursor: pointer;
+    display: grid;
+    @include tablet {
+      display: flex;
+      align-items: flex-end;
+      margin-left: 1rem;
+    }
+    .tab {
+      position: relative;
+      top: 1px;
+      display: grid;
+      place-items: center;
+      border-top: 1px solid #{color("highlight")};
+      border-left: 1px solid #{color("highlight")};
+      border-right: 1px solid #{color("highlight")};
+      height: 3.25rem;
+      max-height: 3.25rem;
+      padding: 0 1rem;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      background-color: #{color("secondary-dark")};
+      transition:
+        padding 0.2s ease-out,
+        max-height 0.2s ease-out;
+    }
   }
-  .bodies {
+
+  .content {
     overflow: hidden;
     display: flex;
     flex-wrap: wrap;
@@ -27,15 +44,48 @@
     align-content: center;
     align-items: center;
     gap: 1rem;
+    border-top: 1px solid #{color("highlight")};
+    border-left: 1px solid #{color("highlight")};
+    border-right: 1px solid #{color("highlight")};
     height: 10rem;
     max-height: 0rem;
-    transition: max-height 0.2s ease-out;
-  }
-  &.open {
-    background-color: #{color("background-dark")};
+    padding: 0 1rem;
+    background-color: transparent;
+    transition:
+      max-height 0.2s ease-out,
+      background-color 0.2s ease-out;
 
-    .bodies {
+    @include tablet {
+      height: 5rem;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+  }
+
+  &.open {
+    .content {
+      background-color: #{color("secondary-dark")};
       max-height: 10rem;
+      @include tablet {
+        max-height: 5rem;
+      }
+    }
+    .tab {
+      &:not(.selected) {
+        max-height: 5px;
+        color: transparent;
+        overflow: hidden;
+        @include tablet {
+          max-height: 2.25rem;
+          color: inherit;
+        }
+      }
+      &.selected {
+        background: linear-gradient(180deg, #{color("secondary")}, #{color("secondary-dark")} 50%);
+        @include tablet {
+          max-height: 2.5rem;
+        }
+      }
     }
   }
 }

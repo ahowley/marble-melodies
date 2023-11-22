@@ -25,3 +25,15 @@ $colors: (
 @function color($_type) {
   @return #{map.get($colors, $_type)};
 }
+
+@mixin tablet {
+  @media (min-width: 800px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1200px) {
+    @content;
+  }
+}

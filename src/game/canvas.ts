@@ -593,6 +593,7 @@ export class WorkspaceEditor {
       lineCap: "round",
       lineJoin: "round",
       tension: 0.5,
+      perfectDrawEnabled: false,
     });
     this.backgroundLayer.add(previewLine);
     this.previewLines.set(canvasId, previewLine);
@@ -629,6 +630,7 @@ export class WorkspaceEditor {
   }
 
   updatePreviewLines() {
+    // TODO: improve performance
     const marbles = this.getMarbles();
     for (let i = 0; i < marbles.length; i++) {
       const marble = marbles[i];
