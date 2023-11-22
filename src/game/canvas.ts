@@ -8,6 +8,9 @@ import { radToDeg, degToRad, lerp } from "./common";
 import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
+export type GameSettings = {
+  previewOnPlayback: boolean;
+};
 export type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
   action: WorkerAction;
@@ -358,6 +361,7 @@ export class WorkspaceEditor {
 
   constructor(
     container: HTMLDivElement,
+    settings: GameSettings,
     stopCallback: () => void,
     initialState: Omit<SerializedBody, "canvasId">[] = [],
   ) {
@@ -380,7 +384,7 @@ export class WorkspaceEditor {
     this.stopCallback = stopCallback;
     this.disableTransformer = false;
     this.needsPreviewUpdate = false;
-    this.previewOnPlayback = true;
+    this.previewOnPlayback = settings.previewOnPlayback;
     this.previousDrawTime = 0;
 
     this.backgroundLayer = new Konva.Layer({

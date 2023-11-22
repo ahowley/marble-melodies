@@ -2,20 +2,22 @@ import { type Component, onMount, onCleanup, createSignal, Accessor, Setter } fr
 import { createDroppable } from "@thisbeyond/solid-dnd";
 import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
-import { WorkspaceEditor, GameState, Body } from "../../game/canvas";
+import { WorkspaceEditor, GameState, Body, GameSettings } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
 import "./Editor.scss";
 
 type EditorProps = {
   editor: Accessor<WorkspaceEditor | undefined>;
   setEditor: Setter<WorkspaceEditor | undefined>;
-  initialState: GameState;
   handleSave: (newState: GameState) => void;
+  saveStateToLocalStorage: () => void;
   closeToolbar: () => void;
 };
 
 export const Editor: Component<EditorProps> = (props) => {
   const {
+    initialState: [initialState, _setInitialState],
+    settings: [settings, _setSettings],
     playing: [playing, setPlaying],
     stopped: [stopped, setStopped],
     singleBodySelected: [_singleBodySelected, setSingleBodySelected],
@@ -25,20 +27,13 @@ export const Editor: Component<EditorProps> = (props) => {
   const droppable = createDroppable(0);
   let container: HTMLDivElement;
 
-  const saveStateToLocalStorage = () => {
-    const initialState = props.editor()?.initialState;
-    if (initialState?.length) {
-      localStorage.setItem("lastTrackState", JSON.stringify(initialState));
-    }
-  };
-
   const togglePlay = () => {
     if (playing()) {
       props.editor()?.pause(props.editor() as WorkspaceEditor);
     } else {
       props.editor()?.play(props.editor() as WorkspaceEditor);
       setStopped(false);
-      saveStateToLocalStorage();
+      props.saveStateToLocalStorage();
     }
     setPlaying(!playing());
   };
@@ -126,7 +121,7 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   onMount(() => {
-    props.setEditor(new WorkspaceEditor(container, editorStopCallback, props.initialState));
+    props.setEditor(new WorkspaceEditor(container, settings, editorStopCallback, initialState));
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);
     addEventListener("pointermove", pointerMoveListener);

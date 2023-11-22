@@ -2,7 +2,7 @@ import { Component, Ref, createSignal } from "solid-js";
 import { useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
-import { Marble } from "../../game/canvas";
+import { GameSettings, Marble } from "../../game/canvas";
 import "./Toolbar.scss";
 
 export type OpenStates = "open" | "closing" | "closed";
@@ -10,9 +10,11 @@ export type OpenStates = "open" | "closing" | "closed";
 type ToolbarProps = {
   ref: Ref<HTMLDetailsElement>;
   toggleToolbarOpen: (event: MouseEvent) => void;
+  changeSetting: (setting: keyof GameSettings, value: any) => void;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
   const {
+    settings: [settings, _setSettings],
     stopped: [stopped, _setStopped],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
     openState: [openState, _setOpenState],
@@ -75,7 +77,21 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         {selectedTab() === 1 && singleBodySelected() && (
           <>Editing {singleBodySelected() instanceof Marble ? "marble" : "block"}</>
         )}
-        {selectedTab() === 2 && <>Settings</>}
+        {selectedTab() === 2 && (
+          <form class="checkboxes" action="">
+            <label class="label">
+              <input
+                type="checkbox"
+                name="previewOnPlay"
+                checked={settings.previewOnPlayback}
+                onClick={(event) =>
+                  props.changeSetting("previewOnPlayback", event.currentTarget.checked)
+                }
+              />
+              Preview during playback
+            </label>
+          </form>
+        )}
       </div>
     </details>
   );

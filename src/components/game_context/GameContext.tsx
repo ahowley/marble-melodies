@@ -6,10 +6,13 @@ import {
   Setter,
   ParentComponent,
 } from "solid-js";
-import { Body } from "../../game/canvas";
+import { SetStoreFunction, createStore } from "solid-js/store";
+import { Body, GameSettings, GameState } from "../../game/canvas";
 import { OpenStates } from "../toolbar/Toolbar";
 
 type GameStateContext = {
+  initialState: [get: GameState, SetStoreFunction<GameState>];
+  settings: [get: GameSettings, SetStoreFunction<GameSettings>];
   playing: [Accessor<boolean>, Setter<boolean>];
   stopped: [Accessor<boolean>, Setter<boolean>];
   singleBodySelected: [Accessor<null | Body>, Setter<null | Body>];
@@ -18,6 +21,10 @@ type GameStateContext = {
 };
 
 const gameStateContext: GameStateContext = {
+  initialState: createStore<GameState>([]),
+  settings: createStore<GameSettings>({
+    previewOnPlayback: false,
+  }),
   playing: createSignal(false),
   stopped: createSignal(true),
   singleBodySelected: createSignal<Body | null>(null),

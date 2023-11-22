@@ -9,7 +9,7 @@ import {
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
 import { useGameContext } from "../../components/game_context/GameContext";
-import { GameState, WorkspaceEditor } from "../../game/canvas";
+import { GameSettings, GameState, WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
@@ -17,8 +17,9 @@ import "./Workspace.scss";
 export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
   const [editor, setEditor] = createSignal<WorkspaceEditor>();
-  const [initialState, setInitialState] = createStore<GameState>([]);
   const {
+    initialState: [_initialState, setInitialState],
+    settings: [_settings, setSettings],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
   } = useGameContext();
@@ -99,6 +100,23 @@ export const Workspace: Component = () => {
     }
   };
 
+  const saveStateToLocalStorage = () => {
+    const initialState = editor()?.initialState;
+    if (initialState?.length) {
+      localStorage.setItem("lastTrackState", JSON.stringify(initialState));
+    }
+
+    const settings: GameSettings = {
+      previewOnPlayback: editor()?.previewOnPlayback ?? false,
+    };
+    localStorage.setItem("gameSettings", JSON.stringify(settings));
+  };
+
+  const changeSetting = (setting: keyof GameSettings, value: any) => {
+    editor()![setting] = value;
+    saveStateToLocalStorage();
+  };
+
   const handleSave = (newState: GameState) => {
     setInitialState(newState);
   };
@@ -109,19 +127,27 @@ export const Workspace: Component = () => {
     if (savedState) {
       setInitialState(savedState);
     }
+
+    const savedSettingsJSON = localStorage.getItem("gameSettings");
+    const savedSettings: GameSettings | null = savedSettingsJSON
+      ? JSON.parse(savedSettingsJSON)
+      : null;
+    if (savedSettings) {
+      setSettings(savedSettings);
+    }
   });
 
   return (
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
       <DragDropSensors />
       <Editor
-        initialState={initialState}
         handleSave={handleSave}
         editor={editor}
         setEditor={setEditor}
+        saveStateToLocalStorage={saveStateToLocalStorage}
         closeToolbar={closeToolbar}
       />
-      <Toolbar ref={details!} toggleToolbarOpen={toggleToolbarOpen} />
+      <Toolbar ref={details!} toggleToolbarOpen={toggleToolbarOpen} changeSetting={changeSetting} />
       <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
     </DragDropProvider>
   );
