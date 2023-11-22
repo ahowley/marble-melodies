@@ -7,6 +7,7 @@
   user-select: none;
   overflow: hidden;
   transition: opacity 0.1s ease-out;
+  overflow: hidden;
   @include tablet {
     width: fit-content;
   }
@@ -22,6 +23,7 @@
       display: flex;
       align-items: flex-end;
     }
+
     .tab {
       position: relative;
       top: 1px;
@@ -39,7 +41,6 @@
       transition:
         padding 0.2s ease-out,
         max-height 0.2s ease-out;
-      overflow: hidden;
 
       &.hidden {
         display: none;
@@ -48,35 +49,47 @@
   }
 
   .content {
-    overflow: hidden;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-content: center;
     align-items: center;
     gap: 1rem;
+    max-height: 0;
     border-top: 1px solid #{color("highlight")};
     border-left: 1px solid #{color("highlight")};
     border-right: 1px solid #{color("highlight")};
-    max-height: 0;
     padding: 0 1rem;
     background-color: #{color("secondary-dark")};
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
+    overflow: hidden;
     transition:
       max-height 0.2s ease-out,
       background-color 0.2s ease-out;
 
     &.bodies,
-    &.edit {
+    &.edit,
+    &.settings {
       height: 10rem;
+    }
+  }
+
+  &[open] {
+    .content {
+      margin-bottom: -1px;
     }
   }
 
   &.open {
     .content {
-      &.bodies {
+      &.bodies,
+      &.edit,
+      &.settings {
         height: 10rem;
+      }
+
+      &.bodies {
         max-height: 10rem;
         @include tablet {
           max-height: 5rem;
@@ -84,10 +97,14 @@
       }
 
       &.edit {
-        height: 10rem;
+        max-height: 2rem;
+      }
+
+      &.settings {
         max-height: 2rem;
       }
     }
+
     .tab {
       &:not(.selected) {
         max-height: 5px;
@@ -97,6 +114,7 @@
           color: inherit;
         }
       }
+
       &.selected {
         background: linear-gradient(180deg, #{color("secondary")}, #{color("secondary-dark")} 50%);
         @include tablet {

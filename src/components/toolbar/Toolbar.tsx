@@ -48,7 +48,17 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         </button>
       </summary>
 
-      <div class={`content ${selectedTab() === 0 ? "bodies" : selectedTab() === 1 ? "edit" : ""}`}>
+      <div
+        class={`content ${
+          selectedTab() === 0
+            ? "bodies"
+            : selectedTab() === 1
+            ? "edit"
+            : selectedTab() === 2
+            ? "settings"
+            : ""
+        }`}
+      >
         {selectedTab() === 0 && (
           <>
             <DraggableBody id="marble">
@@ -65,6 +75,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         {selectedTab() === 1 && singleBodySelected() && (
           <>Editing {singleBodySelected() instanceof Marble ? "marble" : "block"}</>
         )}
+        {selectedTab() === 2 && <>Settings</>}
       </div>
     </details>
   );
