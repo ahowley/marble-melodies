@@ -1,6 +1,8 @@
 @use "../../styles/util" as *;
 
 .marble {
+  position: relative;
+  z-index: 15;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -9,6 +11,8 @@
 }
 
 .track-block {
+  position: relative;
+  z-index: 15;
   width: 200px;
   height: 15px;
   border-radius: 8px;
@@ -17,6 +21,8 @@
 }
 
 .note-block {
+  position: relative;
+  z-index: 15;
   width: 100px;
   height: 50px;
   border-radius: 5px;

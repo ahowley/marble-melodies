@@ -7,11 +7,12 @@ import {
   DragEventHandler,
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
+import { Toolbar } from "../../components/toolbar/Toolbar";
+import { GameProvider } from "../../components/game_context/GameContext";
 import { GameState, WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody, BlockTypes } from "../../game/physics";
-import { Toolbar } from "../../components/toolbar/Toolbar";
-import "./Workspace.scss";
 import { COLORS } from "../../game/config";
+import "./Workspace.scss";
 
 export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
@@ -81,16 +82,20 @@ export const Workspace: Component = () => {
   });
 
   return (
-    <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
-      <DragDropSensors />
-      <Editor
-        initialState={initialState}
-        handleSave={handleSave}
-        editor={editor}
-        setEditor={setEditor}
-      />
-      <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
-      <Toolbar />
-    </DragDropProvider>
+    <GameProvider>
+      <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
+        <DragDropSensors />
+        <Editor
+          initialState={initialState}
+          handleSave={handleSave}
+          editor={editor}
+          setEditor={setEditor}
+        />
+        <DragOverlay>
+          {(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}
+        </DragOverlay>
+        <Toolbar />
+      </DragDropProvider>
+    </GameProvider>
   );
 };

@@ -1,9 +1,10 @@
 import { type Component, onMount, onCleanup, createSignal, Accessor, Setter } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
-import { WorkspaceEditor, GameState } from "../../game/canvas";
+import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
-import "./Editor.scss";
+import { WorkspaceEditor, GameState, Body } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
+import "./Editor.scss";
 
 type EditorProps = {
   editor: Accessor<WorkspaceEditor | undefined>;
@@ -13,8 +14,11 @@ type EditorProps = {
 };
 
 export const Editor: Component<EditorProps> = (props) => {
-  const [playing, setPlaying] = createSignal(false);
-  const [stopped, setStopped] = createSignal(true);
+  const {
+    playing: [playing, setPlaying],
+    stopped: [stopped, setStopped],
+    singleBodySelected: [singleBodySelected, setSingleBodySelected],
+  } = useGameContext();
   const droppable = createDroppable(1);
   let container: HTMLDivElement;
 
@@ -66,7 +70,10 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   const pointerDownListener = (event: PointerEvent) => {
-    if (!(event.target instanceof HTMLCanvasElement)) {
+    if (
+      !(event.target instanceof HTMLCanvasElement) &&
+      !(event.target instanceof HTMLButtonElement)
+    ) {
       props.editor()?.transformer.nodes([]);
     }
   };
@@ -80,6 +87,15 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   const pointerUpListener = (event: PointerEvent) => {
+    setTimeout(() => {
+      const bodiesSelected = props.editor()?.transformer.nodes();
+      if (bodiesSelected?.length === 1) {
+        setSingleBodySelected(bodiesSelected[0] as Body);
+      } else {
+        setSingleBodySelected(null);
+      }
+    });
+
     const draggingBodies = props.editor()?.draggingBodies;
     if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
       draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));

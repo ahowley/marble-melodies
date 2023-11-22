@@ -8,7 +8,7 @@ import { radToDeg, degToRad, lerp } from "./common";
 import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
-type Body = Marble | TrackBlock | NoteBlock;
+export type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
   action: WorkerAction;
   bodies?: SerializedBody[];
@@ -16,7 +16,7 @@ type CanvasMessageData = {
 };
 type CanvasMessageEvent = Omit<MessageEvent, "data"> & { data: CanvasMessageData };
 
-class Marble extends Konva.Circle {
+export class Marble extends Konva.Circle {
   workspace: WorkspaceEditor;
   physicsId?: number;
   initialState: SerializedBody;
@@ -108,7 +108,7 @@ class Marble extends Konva.Circle {
   }
 }
 
-class TrackBlock extends Konva.Rect {
+export class TrackBlock extends Konva.Rect {
   static xOffset = 10;
   static yOffset = -10;
   workspace: WorkspaceEditor;
@@ -227,7 +227,7 @@ class TrackBlock extends Konva.Rect {
   }
 }
 
-class NoteBlock extends Konva.Rect {
+export class NoteBlock extends Konva.Rect {
   static xOffset = 3;
   static yOffset = 6;
   workspace: WorkspaceEditor;
