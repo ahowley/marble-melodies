@@ -35,15 +35,26 @@
       height: 3.25rem;
       max-height: 3.25rem;
       padding: 0 1rem;
+      font-weight: bold;
       border-top-left-radius: 5px;
       border-top-right-radius: 5px;
       background-color: #{color("secondary-dark")};
+      font-weight: bold;
       transition:
         padding 0.2s ease-out,
         max-height 0.2s ease-out;
 
       &.hidden {
         display: none;
+      }
+
+      &.synth-tab {
+        background: #{color("primary")};
+        color: #{color("background")};
+
+        &.selected {
+          background: linear-gradient(180deg, #{color("primary-dark")}, #{color("primary")} 50%);
+        }
       }
     }
   }
@@ -59,6 +70,7 @@
     border-top: 1px solid #{color("highlight")};
     border-left: 1px solid #{color("highlight")};
     border-right: 1px solid #{color("highlight")};
+    height: 10rem;
     padding: 0 1rem;
     background-color: #{color("secondary-dark")};
     border-top-left-radius: 5px;
@@ -68,10 +80,8 @@
       max-height 0.2s ease-out,
       background-color 0.2s ease-out;
 
-    &.bodies,
-    &.edit,
-    &.settings {
-      height: 10rem;
+    &.synth {
+      padding: 0;
     }
   }
 
@@ -83,11 +93,7 @@
 
   &.open {
     .content {
-      &.bodies,
-      &.edit,
-      &.settings {
-        height: 10rem;
-      }
+      height: 10rem;
 
       &.bodies {
         max-height: 10rem;
@@ -103,6 +109,10 @@
       &.settings {
         max-height: 2rem;
       }
+
+      &.synth {
+        max-height: 10rem;
+      }
     }
 
     .tab {
@@ -112,6 +122,10 @@
         @include tablet {
           max-height: 2.25rem;
           color: inherit;
+
+          &.synth-tab {
+            color: #{color("background")};
+          }
         }
       }
 
@@ -128,6 +142,7 @@
     display: grid;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
+
     .label {
       display: flex;
       gap: 0.5rem;

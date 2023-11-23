@@ -1,0 +1,18 @@
+@use "../../styles/util" as *;
+
+.synth {
+  width: 100%;
+  height: 100%;
+  background-color: #{color("primary")};
+  color: #{color("background")};
+  @include tablet {
+    width: 80vw;
+  }
+
+  .no-selection {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+}

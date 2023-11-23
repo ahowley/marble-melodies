@@ -2,8 +2,9 @@ import { type Component, onMount, onCleanup, createSignal, Accessor, Setter } fr
 import { createDroppable } from "@thisbeyond/solid-dnd";
 import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
-import { WorkspaceEditor, GameState, Body, GameSettings } from "../../game/canvas";
+import { WorkspaceEditor, GameState, Body } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
+import { Synth } from "../synth/Synth";
 import "./Editor.scss";
 
 type EditorProps = {
