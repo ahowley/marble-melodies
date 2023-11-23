@@ -16,6 +16,7 @@ export type SerializedBody = {
   gradientEnd?: string | number;
   frontColor?: string;
   backColor?: string;
+  cameraTracking?: boolean;
   isStatic?: boolean;
 };
 export type Frame = {

@@ -1,4 +1,4 @@
-import { Component, Ref, createSignal } from "solid-js";
+import { Component, Ref } from "solid-js";
 import { useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
@@ -11,6 +11,7 @@ type ToolbarProps = {
   ref: Ref<HTMLDetailsElement>;
   toggleToolbarOpen: (event: MouseEvent) => void;
   changeSetting: (setting: keyof GameSettings, value: any) => void;
+  cameraTrackSelectedBody: (track: boolean) => void;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
   const {
@@ -20,6 +21,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     openState: [openState, _setOpenState],
     selectedTab: [selectedTab, _setSelectedTab],
   } = useGameContext();
+  const editableBodyTypes = ["marble"];
 
   return (
     <details
@@ -37,7 +39,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         <button
           onClick={props.toggleToolbarOpen}
           class={`tab ${selectedTab() === 1 ? "selected" : ""} ${
-            !singleBodySelected() ? "hidden" : ""
+            !singleBodySelected() ||
+            !editableBodyTypes.includes((singleBodySelected() as Marble).name())
+              ? "hidden"
+              : ""
           }`}
         >
           Edit {singleBodySelected() instanceof Marble ? "Marble" : "Block"}
@@ -75,14 +80,24 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           </>
         )}
         {selectedTab() === 1 && singleBodySelected() && (
-          <>Editing {singleBodySelected() instanceof Marble ? "marble" : "block"}</>
+          <form class="checkboxes" action="">
+            <label class="label">
+              <input
+                type="checkbox"
+                name="trackCamera"
+                checked={(singleBodySelected() as Marble)?.cameraTracking}
+                onClick={(event) => props.cameraTrackSelectedBody(event.currentTarget.checked)}
+              />
+              Make camera track this marble
+            </label>
+          </form>
         )}
         {selectedTab() === 2 && (
           <form class="checkboxes" action="">
             <label class="label">
               <input
                 type="checkbox"
-                name="previewOnPlay"
+                name="previewOnPlayback"
                 checked={settings.previewOnPlayback}
                 onClick={(event) =>
                   props.changeSetting("previewOnPlayback", event.currentTarget.checked)

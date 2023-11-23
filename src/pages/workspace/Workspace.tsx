@@ -9,7 +9,7 @@ import {
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
 import { useGameContext } from "../../components/game_context/GameContext";
-import { GameSettings, GameState, WorkspaceEditor } from "../../game/canvas";
+import { GameSettings, GameState, Marble, WorkspaceEditor } from "../../game/canvas";
 import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
@@ -22,6 +22,7 @@ export const Workspace: Component = () => {
     settings: [_settings, setSettings],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
+    singleBodySelected: [singleBodySelected, _setSingleBodySelected],
   } = useGameContext();
   let details: HTMLDetailsElement;
 
@@ -117,6 +118,14 @@ export const Workspace: Component = () => {
     saveStateToLocalStorage();
   };
 
+  const cameraTrackSelectedBody = (track: boolean) => {
+    if (singleBodySelected()?.name() === "marble") {
+      const selectedBody = singleBodySelected() as Marble;
+      selectedBody.setTrackCamera(track);
+      saveStateToLocalStorage();
+    }
+  };
+
   const handleSave = (newState: GameState) => {
     setInitialState(newState);
   };
@@ -147,7 +156,12 @@ export const Workspace: Component = () => {
         saveStateToLocalStorage={saveStateToLocalStorage}
         closeToolbar={closeToolbar}
       />
-      <Toolbar ref={details!} toggleToolbarOpen={toggleToolbarOpen} changeSetting={changeSetting} />
+      <Toolbar
+        ref={details!}
+        toggleToolbarOpen={toggleToolbarOpen}
+        changeSetting={changeSetting}
+        cameraTrackSelectedBody={cameraTrackSelectedBody}
+      />
       <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
     </DragDropProvider>
   );

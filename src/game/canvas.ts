@@ -23,6 +23,7 @@ export class Marble extends Konva.Circle {
   workspace: WorkspaceEditor;
   physicsId?: number;
   initialState: SerializedBody;
+  cameraTracking: boolean;
 
   constructor(
     workspace: WorkspaceEditor,
@@ -32,6 +33,7 @@ export class Marble extends Konva.Circle {
     radius: number,
     gradientStart: string | number,
     gradientEnd: string | number,
+    cameraTracking: boolean,
     otherOptions: CircleConfig = {},
   ) {
     super({
@@ -62,6 +64,8 @@ export class Marble extends Konva.Circle {
     this.id(`${this._id}`);
     this.workspace = workspace;
     this.workspace.addBody(this);
+    this.cameraTracking = cameraTracking;
+    if (this.cameraTracking) this.workspace.bodyTrackedByCamera = this;
     this.initialState = this.serialize();
 
     this.on("dragstart", () => {
@@ -102,8 +106,28 @@ export class Marble extends Konva.Circle {
       radius: this.radius(),
       gradientStart: this.fillRadialGradientColorStops()[1],
       gradientEnd: this.fillRadialGradientColorStops()[3],
+      cameraTracking: !!this.cameraTracking,
       isStatic: false,
     };
+  }
+
+  setTrackCamera(track: boolean) {
+    if (track) {
+      const bodies = this.workspace.bodies;
+      for (let i = 0; i < bodies.length; i++) {
+        const body = bodies[i];
+        if (body instanceof Marble) {
+          body.cameraTracking = false;
+          body.initialState = body.serialize();
+        }
+      }
+    }
+
+    this.cameraTracking = track;
+    this.workspace.bodyTrackedByCamera = track ? this : null;
+
+    this.initialState = this.serialize();
+    this.workspace.initialize();
   }
 
   cleanup() {
@@ -350,6 +374,7 @@ export class WorkspaceEditor {
   bodies: Body[];
   bodiesMap: Map<string, Body>;
   draggingBodies: Body[];
+  bodyTrackedByCamera: null | Marble;
   physics: Worker;
   physicsBusy: boolean;
   playing: boolean;
@@ -372,6 +397,7 @@ export class WorkspaceEditor {
     this.bodies = [];
     this.bodiesMap = new Map();
     this.draggingBodies = [];
+    this.bodyTrackedByCamera = null;
     this.unrenderedFrames = [];
     this.renderedFrames = [];
     this.previewFrames = [];
@@ -500,7 +526,9 @@ export class WorkspaceEditor {
   }
 
   recenter() {
-    this.stage.position({ x: 0, y: 0 });
+    if (!(this.playing && this.bodyTrackedByCamera)) {
+      this.stage.position({ x: 0, y: 0 });
+    }
   }
 
   listenForPointerEvents() {
@@ -521,7 +549,9 @@ export class WorkspaceEditor {
     });
 
     this.stage.on("mouseup", (event) => {
-      this.stage.draggable(true);
+      if (!(this.playing && this.bodyTrackedByCamera)) {
+        this.stage.draggable(true);
+      }
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (!this.selection.visible()) return;
 
@@ -680,7 +710,16 @@ export class WorkspaceEditor {
         switch (body.type) {
           case "marble":
             if (body.radius && body.gradientStart && body.gradientEnd)
-              new Marble(this, body.x, body.y, body.rotation, body.radius, body.gradientStart, body.gradientEnd);
+              new Marble(
+                this,
+                body.x,
+                body.y,
+                body.rotation,
+                body.radius,
+                body.gradientStart,
+                body.gradientEnd,
+                body.cameraTracking || false,
+              );
             break;
           case "track-block":
             if (body.width && body.height && body.frontColor && body.backColor)
@@ -784,6 +823,13 @@ export class WorkspaceEditor {
       const body = this.bodiesMap.get(serializedBody.canvasId);
       if (!body) continue;
 
+      if (body instanceof Marble && body.cameraTracking) {
+        const newX = (-serializedBody.x + this.stage.width() / 2) * this.stage.scaleX();
+        const newY = (-serializedBody.y + this.stage.height() / 2) * this.stage.scaleY();
+        this.stage.x(lerp(this.stage.x(), newX, deltaRatio));
+        this.stage.y(lerp(this.stage.y(), newY, deltaRatio));
+      }
+
       body.x(lerp(body.x(), serializedBody.x, deltaRatio));
       body.y(lerp(body.y(), serializedBody.y, deltaRatio));
       body.rotation(lerp(body.rotation(), radToDeg(serializedBody.rotation), deltaRatio));
@@ -800,6 +846,7 @@ export class WorkspaceEditor {
 
     self.update(delta);
     self.stage.draw();
+
     requestAnimationFrame((time) => self.draw(self, time));
   }
 
@@ -808,19 +855,29 @@ export class WorkspaceEditor {
     self.playing = true;
     self.disableTransformer = true;
     self.toggleDraggableBodies();
+
+    if (self.bodyTrackedByCamera) {
+      self.stage.draggable(false);
+    }
+
     requestAnimationFrame((time) => self.draw(self, time, true));
   }
 
   pause(self: WorkspaceEditor) {
     self.playing = false;
+    self.stage.draggable(true);
   }
 
   stop(self: WorkspaceEditor) {
     self.playing = false;
+    self.stage.draggable(true);
     self.disableTransformer = false;
     self.initialize(self.initialState, true);
     if (self.stopCallback) {
       self.stopCallback();
+    }
+    if (self.bodyTrackedByCamera) {
+      self.recenter();
     }
   }
 

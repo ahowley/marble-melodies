@@ -71,10 +71,8 @@ export const Editor: Component<EditorProps> = (props) => {
   const pointerDownListener = (event: PointerEvent) => {
     const element = event.target as Element;
 
-    if (!interactableElements.length) {
-      const toolbar = document.querySelector(".toolbar");
-      toolbar && interactableElements.push(...(toolbar.querySelectorAll("*") || []));
-    }
+    const toolbar = document.querySelector(".toolbar");
+    toolbar && interactableElements.push(...(toolbar.querySelectorAll("*") || []));
 
     if (
       !(event.target instanceof HTMLCanvasElement) &&
