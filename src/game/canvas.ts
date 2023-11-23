@@ -6,6 +6,7 @@ import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
 import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
+import { Music } from "./music";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
 export type GameSettings = {
@@ -356,6 +357,7 @@ export class NoteBlock extends Konva.Rect {
 export class WorkspaceEditor {
   container: HTMLDivElement;
   initialState: (SerializedBody | Omit<SerializedBody, "canvasId">)[];
+  music: Music | null;
   unrenderedFrames: Frame[];
   renderedFrames: Frame[];
   previewFrames: Frame[];
@@ -412,6 +414,7 @@ export class WorkspaceEditor {
     this.needsPreviewUpdate = false;
     this.previewOnPlayback = settings.previewOnPlayback;
     this.previousDrawTime = 0;
+    this.music = null;
 
     this.backgroundLayer = new Konva.Layer({
       listening: false,
@@ -800,7 +803,11 @@ export class WorkspaceEditor {
       }
 
       if (nextFrame?.hasNote) {
-        console.log(nextFrame);
+        const bodyWithNote = nextFrame.bodies.find((body) => body.playNote);
+        if (!nextFrame.playedNote) {
+          this.music?.playNote(bodyWithNote);
+        }
+        nextFrame.playedNote = true;
       }
     };
 
@@ -849,7 +856,7 @@ export class WorkspaceEditor {
   draw(self: WorkspaceEditor, time: number, firstCall = false) {
     const delta = firstCall ? DELTA : time - self.previousDrawTime;
     self.previousDrawTime = time;
-    if (!self.playing) return;
+    if (!self.playing || !self.music) return;
 
     self.update(delta);
 

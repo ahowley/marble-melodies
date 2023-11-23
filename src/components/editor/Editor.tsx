@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, createSignal, Accessor, Setter } from "solid-js";
+import { type Component, onMount, onCleanup, Accessor, Setter } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
 import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
@@ -7,8 +7,6 @@ import { SerializedBody } from "../../game/physics";
 import "./Editor.scss";
 
 type EditorProps = {
-  editor: Accessor<WorkspaceEditor | undefined>;
-  setEditor: Setter<WorkspaceEditor | undefined>;
   handleSave: (newState: GameState) => void;
   saveStateToLocalStorage: () => void;
   closeToolbar: () => void;
@@ -23,6 +21,7 @@ export const Editor: Component<EditorProps> = (props) => {
     singleBodySelected: [_singleBodySelected, setSingleBodySelected],
     openState: [openState, _setOpenState],
     selectedTab: [selectedTab, _setSelectedTab],
+    editor: [editor, setEditor],
   } = useGameContext();
   const droppable = createDroppable(0);
   let container: HTMLDivElement;
@@ -30,9 +29,9 @@ export const Editor: Component<EditorProps> = (props) => {
 
   const togglePlay = () => {
     if (playing()) {
-      props.editor()?.pause(props.editor() as WorkspaceEditor);
+      editor()?.pause(editor() as WorkspaceEditor);
     } else {
-      props.editor()?.play(props.editor() as WorkspaceEditor);
+      editor()?.play(editor() as WorkspaceEditor);
       setStopped(false);
       props.saveStateToLocalStorage();
     }
@@ -40,7 +39,7 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   const handleStop = () => {
-    props.editor()?.stop(props.editor() as WorkspaceEditor);
+    editor()?.stop(editor() as WorkspaceEditor);
     setStopped(true);
   };
 
@@ -49,23 +48,22 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   const handleDelete = () => {
-    const bodiesToDelete = props
-      .editor()
+    const bodiesToDelete = editor()
       ?.transformer.nodes()
       .map((node) => node.id());
     if (bodiesToDelete?.length) {
-      props.editor()?.transformer.nodes([]);
-      const newState = (props.editor()?.initialState as SerializedBody[])?.filter(
+      editor()?.transformer.nodes([]);
+      const newState = (editor()?.initialState as SerializedBody[])?.filter(
         (body) => !bodiesToDelete.includes(body.canvasId),
       );
       if (newState) {
-        props.editor()?.initialize(newState);
+        editor()?.initialize(newState);
       }
     }
   };
 
   const resizeListener = () => {
-    props.editor()?.sizeToContainer();
+    editor()?.sizeToContainer();
   };
 
   const pointerDownListener = (event: PointerEvent) => {
@@ -79,39 +77,35 @@ export const Editor: Component<EditorProps> = (props) => {
       !(event.target instanceof HTMLButtonElement) &&
       !interactableElements.includes(element)
     ) {
-      props.editor()?.transformer.nodes([]);
+      editor()?.transformer.nodes([]);
     }
   };
 
   const pointerMoveListener = (event: PointerEvent) => {
-    const draggingBodies = props.editor()?.draggingBodies;
+    const draggingBodies = editor()?.draggingBodies;
     if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
       draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));
-      props.editor()?.initialize();
+      editor()?.initialize();
     }
   };
 
   const pointerUpListener = (event: PointerEvent) => {
     setTimeout(() => {
-      const bodiesSelected = props.editor()?.transformer.nodes();
+      const bodiesSelected = editor()?.transformer.nodes();
       if (bodiesSelected?.length === 1) {
         setSingleBodySelected(bodiesSelected[0] as Body);
       } else {
         setSingleBodySelected(null);
       }
-      if (
-        openState() === "open" &&
-        selectedTab() === 1 &&
-        !props.editor()?.transformer.nodes().length
-      ) {
+      if (openState() === "open" && selectedTab() === 1 && !editor()?.transformer.nodes().length) {
         props.closeToolbar();
       }
     });
 
-    const draggingBodies = props.editor()?.draggingBodies;
+    const draggingBodies = editor()?.draggingBodies;
     if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
       draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));
-      props.editor()?.initialize();
+      editor()?.initialize();
     }
   };
 
@@ -128,7 +122,7 @@ export const Editor: Component<EditorProps> = (props) => {
   };
 
   onMount(() => {
-    props.setEditor(new WorkspaceEditor(container, settings, editorStopCallback, initialState));
+    setEditor(new WorkspaceEditor(container, settings, editorStopCallback, initialState));
     addEventListener("resize", resizeListener);
     addEventListener("pointerdown", pointerDownListener);
     addEventListener("pointermove", pointerMoveListener);

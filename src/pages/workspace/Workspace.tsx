@@ -16,10 +16,10 @@ import "./Workspace.scss";
 
 export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
-  const [editor, setEditor] = createSignal<WorkspaceEditor>();
   const {
     initialState: [_initialState, setInitialState],
     settings: [_settings, setSettings],
+    editor: [editor, _setEditor],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
@@ -151,8 +151,6 @@ export const Workspace: Component = () => {
       <DragDropSensors />
       <Editor
         handleSave={handleSave}
-        editor={editor}
-        setEditor={setEditor}
         saveStateToLocalStorage={saveStateToLocalStorage}
         closeToolbar={closeToolbar}
       />

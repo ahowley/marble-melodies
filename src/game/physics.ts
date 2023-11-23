@@ -27,6 +27,7 @@ export type Frame = {
   timeSpentRendering: number;
   lastFrame: boolean;
   hasNote: boolean;
+  playedNote: boolean;
 };
 export type WorkerAction =
   | "initialize"
@@ -113,6 +114,7 @@ const getSerializedBody = (body: Body) => {
 const getNextFrame = (preview = false): Frame => {
   const startTime = performance.now();
   Engine.update(engine, DELTA);
+  frameId += 1;
 
   const frame: Frame = {
     id: frameId,
@@ -121,6 +123,7 @@ const getNextFrame = (preview = false): Frame => {
     calcDuration: performance.now() - startTime,
     lastFrame: preview || !hasMovingBodies,
     hasNote: !!bodiesWithNotes.length,
+    playedNote: false,
   };
 
   if (frame.hasNote) {

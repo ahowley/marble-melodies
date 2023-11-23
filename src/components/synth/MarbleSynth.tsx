@@ -1,14 +1,19 @@
-import { Component, onCleanup, onMount } from "solid-js";
+import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import * as Tone from "tone";
 import { useGameContext } from "../game_context/GameContext";
 import "./MarbleSynth.scss";
+import { Music } from "../../game/music";
 
-export const MarbleSynth: Component = (props) => {
+type MarbleSynthProps = {
+  showing: boolean;
+};
+export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   const {
-    singleBodySelected: [singleBodySelected, setSingleBodySelected],
+    editor: [editor, _setEditor],
+    singleBodySelected: [singleBodySelected, _setSingleBodySelected],
+    marbleSynth: [marbleSynth, setMarbleSynth],
   } = useGameContext();
   let userInteracted = false;
-  let synth: Tone.PolySynth;
 
   onMount(() => {
     const interactListener = async () => {
@@ -16,17 +21,25 @@ export const MarbleSynth: Component = (props) => {
       userInteracted = true;
 
       await Tone.start();
-      synth = new Tone.PolySynth().toDestination();
+      setMarbleSynth(new Tone.PolySynth().toDestination());
     };
 
-    addEventListener("pointerup", interactListener);
+    document.addEventListener("pointerup", interactListener);
     onCleanup(() => {
-      removeEventListener("pointerup", interactListener);
+      document.removeEventListener("pointerup", interactListener);
     });
   });
 
+  createEffect(() => {
+    const currentEditor = editor();
+    const synth = marbleSynth();
+    if (currentEditor && synth) {
+      currentEditor.music = new Music(synth);
+    }
+  });
+
   return (
-    <section class="synth">
+    <section class={`synth ${!props.showing ? "hidden" : ""}`}>
       {singleBodySelected()?.name() === "note-block" ? (
         <>
           <form class="controls"></form>
@@ -34,8 +47,8 @@ export const MarbleSynth: Component = (props) => {
             type="button"
             class="preview"
             onClick={() => {
-              synth.triggerAttack("C4", Tone.now(), 0.5);
-              synth.triggerRelease("C4", Tone.now() + 0.1);
+              marbleSynth()?.triggerAttack("C4", Tone.now(), 0.5);
+              marbleSynth()?.triggerRelease("C4", Tone.now() + 0.1);
             }}
           >
             Preview

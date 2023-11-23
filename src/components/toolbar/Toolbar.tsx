@@ -1,8 +1,8 @@
-import { Component, Ref } from "solid-js";
+import { Component, Ref, createEffect } from "solid-js";
 import { useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
-import { GameSettings, Marble } from "../../game/canvas";
+import { GameSettings, Marble, WorkspaceEditor } from "../../game/canvas";
 import "./Toolbar.scss";
 import { MarbleSynth } from "../synth/MarbleSynth";
 
@@ -116,7 +116,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             </label>
           </form>
         )}
-        {selectedTab() === 3 && <MarbleSynth />}
+        <MarbleSynth showing={selectedTab() === 3} />
       </div>
     </details>
   );
