@@ -697,6 +697,7 @@ export class WorkspaceEditor {
       this.bodies.pop();
     }
     this.bodiesMap.clear();
+    this.bodyTrackedByCamera = null;
   }
 
   initialize(bodies?: Omit<SerializedBody, "canvasId">[], enablePreview = false) {
@@ -824,8 +825,8 @@ export class WorkspaceEditor {
       if (!body) continue;
 
       if (body instanceof Marble && body.cameraTracking) {
-        const newX = (-serializedBody.x + this.stage.width() / 2) * this.stage.scaleX();
-        const newY = (-serializedBody.y + this.stage.height() / 2) * this.stage.scaleY();
+        const newX = -serializedBody.x * this.stage.scaleX() + this.stage.width() / 2;
+        const newY = -serializedBody.y * this.stage.scaleY() + this.stage.height() / 2;
         this.stage.x(lerp(this.stage.x(), newX, deltaRatio));
         this.stage.y(lerp(this.stage.y(), newY, deltaRatio));
       }
