@@ -88,7 +88,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 checked={(singleBodySelected() as Marble)?.cameraTracking}
                 onClick={(event) => props.cameraTrackSelectedBody(event.currentTarget.checked)}
               />
-              Make camera track this marble
+              Make camera follow this marble
             </label>
           </form>
         )}
