@@ -114,20 +114,20 @@ const getNextFrame = (preview = false): Frame => {
   const startTime = performance.now();
   Engine.update(engine, DELTA);
 
-  let hasNote = false;
-  if (bodiesWithNotes.length) {
-    hasNote = true;
-    bodiesWithNotes = [];
-  }
-
-  return {
+  const frame: Frame = {
     id: frameId,
     bodies: world.bodies.map((body) => getSerializedBody(body)),
     timeSpentRendering: 0,
     calcDuration: performance.now() - startTime,
     lastFrame: preview || !hasMovingBodies,
-    hasNote: hasNote && !previewing,
+    hasNote: !!bodiesWithNotes.length,
   };
+
+  if (frame.hasNote) {
+    bodiesWithNotes = [];
+  }
+
+  return frame;
 };
 
 const renderPreview = async () => {
