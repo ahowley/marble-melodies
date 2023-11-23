@@ -4,7 +4,7 @@ import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
 import { GameSettings, Marble } from "../../game/canvas";
 import "./Toolbar.scss";
-import { Synth } from "../synth/Synth";
+import { MarbleSynth } from "../synth/MarbleSynth";
 
 export type OpenStates = "open" | "closing" | "closed";
 
@@ -116,7 +116,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             </label>
           </form>
         )}
-        {selectedTab() === 3 && <Synth />}
+        {selectedTab() === 3 && <MarbleSynth />}
       </div>
     </details>
   );

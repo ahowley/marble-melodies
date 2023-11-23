@@ -18,6 +18,7 @@ export type SerializedBody = {
   backColor?: string;
   cameraTracking?: boolean;
   isStatic?: boolean;
+  playNote?: boolean;
 };
 export type Frame = {
   id: number;
@@ -25,6 +26,7 @@ export type Frame = {
   calcDuration: number;
   timeSpentRendering: number;
   lastFrame: boolean;
+  hasNote: boolean;
 };
 export type WorkerAction =
   | "initialize"
@@ -57,6 +59,7 @@ const frames: Frame[] = [];
 let initialState: SerializedBody[] = [];
 const physicsToCanvasMap = new Map<number, string>();
 const bodiesMap = new Map<string, Body>();
+let bodiesWithNotes: Body[] = [];
 
 const centerPositionFromTopLeft = (rectangle: SerializedBody) => {
   const topCenterPosition = {
@@ -101,6 +104,7 @@ const getSerializedBody = (body: Body) => {
     x,
     y,
     rotation: body.angle,
+    playNote: bodiesWithNotes.includes(body),
   };
 
   return serializedBody;
@@ -110,12 +114,19 @@ const getNextFrame = (preview = false): Frame => {
   const startTime = performance.now();
   Engine.update(engine, DELTA);
 
+  let hasNote = false;
+  if (bodiesWithNotes.length) {
+    hasNote = true;
+    bodiesWithNotes = [];
+  }
+
   return {
     id: frameId,
     bodies: world.bodies.map((body) => getSerializedBody(body)),
     timeSpentRendering: 0,
     calcDuration: performance.now() - startTime,
     lastFrame: preview || !hasMovingBodies,
+    hasNote: hasNote && !previewing,
   };
 };
 
@@ -130,6 +141,9 @@ const renderPreview = async () => {
   for (let i = 0; i < PREVIEW_FRAME_COUNT; i += FRAME_CACHE_SIZE * cachesPerPreviewPoint) {
     lastPreviewTime = performance.now();
     for (let j = 0; j < FRAME_CACHE_SIZE * cachesPerPreviewPoint; j++) {
+      if (bodiesWithNotes.length) {
+        bodiesWithNotes = [];
+      }
       if (j === 0) {
         const frame = getNextFrame(true);
         previewFrames.push(frame);
@@ -265,11 +279,23 @@ const initialize = async (bodies: SerializedBody[]) => {
 
 Events.on(engine, "collisionStart", (event) => {
   const { pairs } = event;
+  const alreadyCalculated: Body[] = [];
 
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i];
     if (pair.bodyA.label === "boundary") {
       removeBody(pair.bodyB.id);
+    }
+
+    if (
+      (pair.bodyA.label === "marble" && pair.bodyB.label === "note-block") ||
+      (pair.bodyA.label === "note-block" && pair.bodyB.label === "marble")
+    ) {
+      const block = pair.bodyA.label === "marble" ? pair.bodyB : pair.bodyA;
+      if (!alreadyCalculated.includes(block)) {
+        bodiesWithNotes.push(block);
+      }
+      alreadyCalculated.push(block);
     }
   }
 });

@@ -4,7 +4,6 @@ import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
 import { WorkspaceEditor, GameState, Body } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
-import { Synth } from "../synth/Synth";
 import "./Editor.scss";
 
 type EditorProps = {

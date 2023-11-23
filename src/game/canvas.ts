@@ -794,24 +794,30 @@ export class WorkspaceEditor {
   }
 
   update(delta: number) {
+    const afterUpdateNextFrame = (self: WorkspaceEditor, nextFrame: Frame) => {
+      if (nextFrame?.lastFrame) {
+        self.stop(self);
+      }
+
+      if (nextFrame?.hasNote) {
+        console.log(nextFrame);
+      }
+    };
+
     if (this.unrenderedFrames.length <= FRAME_CACHE_SIZE && !this.physicsBusy) {
       this.requestPhysicsUpdate();
       this.physicsBusy = true;
     }
 
     let nextFrame = this.unrenderedFrames[0];
-    if (nextFrame?.lastFrame) {
-      this.stop(this);
-    }
+    afterUpdateNextFrame(this, nextFrame);
     if (!nextFrame) return;
 
     let remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
     while (delta > remainingRenderTime && this.unrenderedFrames[1]) {
       delta -= remainingRenderTime;
       nextFrame = this.unrenderedFrames[1];
-      if (nextFrame?.lastFrame) {
-        this.stop(this);
-      }
+      afterUpdateNextFrame(this, nextFrame);
       remainingRenderTime = DELTA - nextFrame.timeSpentRendering;
       this.unrenderedFrames.shift();
     }
@@ -846,7 +852,6 @@ export class WorkspaceEditor {
     if (!self.playing) return;
 
     self.update(delta);
-    self.stage.draw();
 
     requestAnimationFrame((time) => self.draw(self, time));
   }

@@ -1,6 +1,7 @@
 @use "../../styles/util" as *;
 
 .synth {
+  position: relative;
   width: 100%;
   height: 100%;
   background-color: #{color("primary")};
@@ -14,5 +15,13 @@
     place-items: center;
     width: 100%;
     height: 100%;
+  }
+
+  .preview {
+    display: flex;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: bold;
+    background-color: #{color("accent-light")};
   }
 }
