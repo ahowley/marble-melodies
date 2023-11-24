@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, Accessor, Setter } from "solid-js";
+import { type Component, onMount, onCleanup } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
 import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";

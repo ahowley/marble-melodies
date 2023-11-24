@@ -361,6 +361,25 @@ export class NoteBlock extends Konva.Rect {
     };
   }
 
+  changeNote(newNote: Notes) {
+    this.note = newNote;
+    this.initialState = this.serialize();
+    this.workspace.initialize();
+  }
+
+  changeOctave(newOctave: Octaves) {
+    console.log(newOctave);
+    this.octave = newOctave;
+    this.initialState = this.serialize();
+    this.workspace.initialize();
+  }
+
+  changeVolume(newVolume: number) {
+    this.volume = newVolume;
+    this.initialState = this.serialize();
+    this.workspace.initialize();
+  }
+
   cleanup() {
     this.remove();
   }

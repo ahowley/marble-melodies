@@ -10,12 +10,12 @@ export type OpenStates = "open" | "closing" | "closed";
 
 type ToolbarProps = {
   ref: Ref<HTMLDetailsElement>;
+  saveStateToLocalStorage: () => void;
   toggleToolbarOpen: (event: MouseEvent) => void;
-  changeSetting: (setting: keyof GameSettings, value: any) => void;
-  cameraTrackSelectedBody: (track: boolean) => void;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
   const {
+    editor: [editor, _setEditor],
     settings: [settings, _setSettings],
     stopped: [stopped, _setStopped],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
@@ -23,6 +23,19 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     selectedTab: [selectedTab, _setSelectedTab],
   } = useGameContext();
   const editableBodyTypes = ["marble"];
+
+  const changeSetting = (setting: keyof GameSettings, value: any) => {
+    editor()![setting] = value;
+    props.saveStateToLocalStorage();
+  };
+
+  const cameraTrackSelectedBody = (track: boolean) => {
+    if (singleBodySelected()?.name() === "marble") {
+      const selectedBody = singleBodySelected() as Marble;
+      selectedBody.setTrackCamera(track);
+      props.saveStateToLocalStorage();
+    }
+  };
 
   return (
     <details
@@ -95,7 +108,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 type="checkbox"
                 name="trackCamera"
                 checked={(singleBodySelected() as Marble)?.cameraTracking}
-                onClick={(event) => props.cameraTrackSelectedBody(event.currentTarget.checked)}
+                onClick={(event) => cameraTrackSelectedBody(event.currentTarget.checked)}
               />
               Make camera follow this marble
             </label>
@@ -108,15 +121,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 type="checkbox"
                 name="previewOnPlayback"
                 checked={settings.previewOnPlayback}
-                onClick={(event) =>
-                  props.changeSetting("previewOnPlayback", event.currentTarget.checked)
-                }
+                onClick={(event) => changeSetting("previewOnPlayback", event.currentTarget.checked)}
               />
               Preview during playback
             </label>
           </form>
         )}
-        <MarbleSynth showing={selectedTab() === 3} />
+        <MarbleSynth
+          saveStateToLocalStorage={props.saveStateToLocalStorage}
+          showing={selectedTab() === 3}
+        />
       </div>
     </details>
   );

@@ -1,5 +1,4 @@
-import { createSignal, type Component, onMount } from "solid-js";
-import { createStore } from "solid-js/store";
+import { type Component, onMount } from "solid-js";
 import {
   DragDropProvider,
   DragDropSensors,
@@ -9,7 +8,7 @@ import {
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
 import { useGameContext } from "../../components/game_context/GameContext";
-import { GameSettings, GameState, Marble, WorkspaceEditor } from "../../game/canvas";
+import { GameSettings, GameState } from "../../game/canvas";
 import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
@@ -22,7 +21,6 @@ export const Workspace: Component = () => {
     editor: [editor, _setEditor],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
-    singleBodySelected: [singleBodySelected, _setSingleBodySelected],
   } = useGameContext();
   let details: HTMLDetailsElement;
 
@@ -113,19 +111,6 @@ export const Workspace: Component = () => {
     localStorage.setItem("gameSettings", JSON.stringify(settings));
   };
 
-  const changeSetting = (setting: keyof GameSettings, value: any) => {
-    editor()![setting] = value;
-    saveStateToLocalStorage();
-  };
-
-  const cameraTrackSelectedBody = (track: boolean) => {
-    if (singleBodySelected()?.name() === "marble") {
-      const selectedBody = singleBodySelected() as Marble;
-      selectedBody.setTrackCamera(track);
-      saveStateToLocalStorage();
-    }
-  };
-
   const handleSave = (newState: GameState) => {
     setInitialState(newState);
   };
@@ -156,9 +141,8 @@ export const Workspace: Component = () => {
       />
       <Toolbar
         ref={details!}
+        saveStateToLocalStorage={saveStateToLocalStorage}
         toggleToolbarOpen={toggleToolbarOpen}
-        changeSetting={changeSetting}
-        cameraTrackSelectedBody={cameraTrackSelectedBody}
       />
       <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
     </DragDropProvider>

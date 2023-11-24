@@ -1,12 +1,13 @@
 import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import * as Tone from "tone";
 import { useGameContext } from "../game_context/GameContext";
-import "./MarbleSynth.scss";
-import { Music } from "../../game/music";
 import { NoteBlock } from "../../game/canvas";
+import { Music, Notes, Octaves } from "../../game/music";
+import "./MarbleSynth.scss";
 
 type MarbleSynthProps = {
   showing: boolean;
+  saveStateToLocalStorage: () => void;
 };
 export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   const {
@@ -22,7 +23,8 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
       userInteracted = true;
 
       await Tone.start();
-      setMarbleSynth(new Tone.PolySynth().toDestination());
+      const synth = new Tone.PolySynth().toDestination();
+      setMarbleSynth(new Music(synth, 0.5));
     };
 
     document.addEventListener("pointerup", interactListener);
@@ -31,11 +33,47 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
     });
   });
 
+  const previewNote = () => {
+    const noteBlock = singleBodySelected();
+    if (!noteBlock || !(noteBlock instanceof NoteBlock)) {
+      marbleSynth()?.playPreviewNote();
+    } else {
+      marbleSynth()?.playNote(noteBlock.serialize());
+    }
+  };
+
+  const handleChangeNote = (event: Event) => {
+    const select = event.currentTarget as HTMLSelectElement;
+    const noteBlock = singleBodySelected();
+    if (!noteBlock || !(noteBlock instanceof NoteBlock) || !select) return;
+
+    noteBlock.changeNote(select.value as Notes);
+    props.saveStateToLocalStorage();
+  };
+
+  const handleChangeOctave = (event: Event) => {
+    const select = event.currentTarget as HTMLSelectElement;
+    const noteBlock = singleBodySelected();
+    if (!noteBlock || !(noteBlock instanceof NoteBlock) || !select) return;
+
+    noteBlock.changeOctave(select.value as Octaves);
+    props.saveStateToLocalStorage();
+  };
+
+  const handleChangeVolume = (event: Event) => {
+    const range = event.currentTarget as HTMLInputElement;
+    const noteBlock = singleBodySelected();
+    if (!noteBlock || !(noteBlock instanceof NoteBlock) || !range) return;
+
+    noteBlock.changeVolume(parseFloat(range.value));
+    props.saveStateToLocalStorage();
+  };
+
   createEffect(() => {
     const currentEditor = editor();
     const synth = marbleSynth();
     if (currentEditor && synth) {
-      currentEditor.music = new Music(synth, 0.5);
+      currentEditor.music = synth;
     }
   });
 
@@ -71,6 +109,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
                 step="0.01"
                 name="volume"
                 value={(singleBodySelected() as NoteBlock)?.volume ?? "0.5"}
+                onChange={handleChangeVolume}
               />
             </label>
             <div class="note-selection">
@@ -80,6 +119,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
                   name="note"
                   class="dropdown"
                   value={(singleBodySelected() as NoteBlock)?.note ?? "auto"}
+                  onChange={handleChangeNote}
                 >
                   <option value="auto">Auto</option>
                   <option value="A">A</option>
@@ -102,6 +142,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
                   name="note"
                   class="dropdown"
                   value={(singleBodySelected() as NoteBlock)?.octave ?? "auto"}
+                  onChange={handleChangeOctave}
                 >
                   <option value="auto">Auto</option>
                   <option value="1">1</option>
@@ -117,14 +158,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
             </div>
           </fieldset>
         )}
-        <button
-          type="button"
-          class="preview"
-          onClick={() => {
-            marbleSynth()?.triggerAttack("C4", Tone.now(), 0.5);
-            marbleSynth()?.triggerRelease("C4", Tone.now() + 0.1);
-          }}
-        >
+        <button type="button" class="preview" onClick={previewNote}>
           Preview
         </button>
       </form>

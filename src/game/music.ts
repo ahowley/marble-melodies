@@ -13,6 +13,11 @@ export class Music {
     this.volume = volume;
   }
 
+  playPreviewNote() {
+    this.marbleSynth.triggerAttack("C4", Tone.now(), 0.5);
+    this.marbleSynth.triggerRelease("C4", Tone.now() + 0.1);
+  }
+
   playNote(body: SerializedBody) {
     let note = body.note === "auto" || !body.note ? "C" : body.note;
     let octave = body.octave === "auto" || !body.octave ? "4" : body.octave;

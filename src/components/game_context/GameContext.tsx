@@ -9,7 +9,7 @@ import {
 import { SetStoreFunction, createStore } from "solid-js/store";
 import { Body, GameSettings, GameState, WorkspaceEditor } from "../../game/canvas";
 import { OpenStates } from "../toolbar/Toolbar";
-import { PolySynth } from "tone";
+import { Music } from "../../game/music";
 
 type GameStateContext = {
   initialState: [get: GameState, SetStoreFunction<GameState>];
@@ -20,7 +20,7 @@ type GameStateContext = {
   singleBodySelected: [Accessor<null | Body>, Setter<null | Body>];
   openState: [Accessor<OpenStates>, Setter<OpenStates>];
   selectedTab: [Accessor<number>, Setter<number>];
-  marbleSynth: [Accessor<null | PolySynth>, Setter<null | PolySynth>];
+  marbleSynth: [Accessor<null | Music>, Setter<null | Music>];
 };
 
 const gameStateContext: GameStateContext = {
@@ -34,7 +34,7 @@ const gameStateContext: GameStateContext = {
   singleBodySelected: createSignal<Body | null>(null),
   openState: createSignal<OpenStates>("closed"),
   selectedTab: createSignal(0),
-  marbleSynth: createSignal<null | PolySynth>(null),
+  marbleSynth: createSignal<null | Music>(null),
 };
 
 const GameContext = createContext<GameStateContext>(gameStateContext);
