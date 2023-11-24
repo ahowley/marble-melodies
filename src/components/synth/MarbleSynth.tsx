@@ -39,24 +39,88 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   });
 
   return (
-    <section class={`synth ${!props.showing ? "hidden" : ""}`}>
-      {singleBodySelected()?.name() === "note-block" ? (
-        <>
-          <form class="controls"></form>
-          <button
-            type="button"
-            class="preview"
-            onClick={() => {
-              marbleSynth()?.triggerAttack("C4", Tone.now(), 0.5);
-              marbleSynth()?.triggerRelease("C4", Tone.now() + 0.1);
-            }}
-          >
-            Preview
-          </button>
-        </>
-      ) : (
-        <p class="no-selection">Select a note block to get started!</p>
-      )}
+    <section class={`marble-synth ${!props.showing ? "hidden" : ""}`}>
+      <form class="controls">
+        <fieldset class="synth settings">
+          <legend class="legend">Global</legend>
+          <label class="label">
+            Volume
+            <input
+              class="slider"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              name="volume"
+              value="0.5"
+            />
+          </label>
+        </fieldset>
+
+        {singleBodySelected()?.name() === "note-block" && (
+          <fieldset class="note settings">
+            <legend class="legend">Block</legend>
+            <label class="label">
+              Volume
+              <input
+                class="slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                name="volume"
+                value="0.5"
+              />
+            </label>
+            <div class="note-selection">
+              <label class="label">
+                Note
+                <select name="note" class="dropdown">
+                  <option value="auto" selected>
+                    Auto
+                  </option>
+                  <option value="A">A</option>
+                  <option value="A#">A#</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="C#">C#</option>
+                  <option value="D">D</option>
+                  <option value="D#">D#</option>
+                  <option value="E">E</option>
+                  <option value="F">F</option>
+                  <option value="F#">F#</option>
+                  <option value="G">G</option>
+                  <option value="G#">G#</option>
+                </select>
+              </label>
+              <label class="label">
+                Octave
+                <select name="note" class="dropdown">
+                  <option value="auto">Auto</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+        )}
+        <button
+          type="button"
+          class="preview"
+          onClick={() => {
+            marbleSynth()?.triggerAttack("C4", Tone.now(), 0.5);
+            marbleSynth()?.triggerRelease("C4", Tone.now() + 0.1);
+          }}
+        >
+          Preview
+        </button>
+      </form>
     </section>
   );
 };

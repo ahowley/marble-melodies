@@ -1,10 +1,10 @@
-import { Component, Ref, createEffect } from "solid-js";
+import { Component, Ref } from "solid-js";
 import { useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
-import { GameSettings, Marble, WorkspaceEditor } from "../../game/canvas";
-import "./Toolbar.scss";
+import { GameSettings, Marble } from "../../game/canvas";
 import { MarbleSynth } from "../synth/MarbleSynth";
+import "./Toolbar.scss";
 
 export type OpenStates = "open" | "closing" | "closed";
 

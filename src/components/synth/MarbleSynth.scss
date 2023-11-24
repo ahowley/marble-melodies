@@ -1,9 +1,10 @@
 @use "../../styles/util" as *;
 
-.synth {
+.marble-synth {
   position: relative;
   width: 100%;
   height: 100%;
+  padding: 0 1rem 0.5rem;
   background-color: #{color("primary")};
   color: #{color("background")};
   @include tablet {
@@ -14,18 +15,53 @@
     display: none;
   }
 
-  .no-selection {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
   .preview {
+    position: absolute;
+    inset: auto 1rem 1rem auto;
     display: flex;
     padding: 0.5rem 1rem;
     border-radius: 5px;
     font-weight: bold;
     background-color: #{color("accent-light")};
+  }
+
+  .legend {
+    text-align: center;
+    padding: 0.5rem 0 0;
+  }
+
+  .label {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .slider {
+    width: 100%;
+  }
+
+  .settings {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .note-selection {
+    display: grid;
+    gap: 1rem;
+
+    @include tablet {
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .label {
+      display: grid;
+      grid-template-columns: 5rem minmax(0, 1fr);
+
+      .dropdown {
+        flex-grow: 1;
+      }
+    }
   }
 }
