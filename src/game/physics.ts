@@ -1,5 +1,6 @@
 import { Engine, Body, Bodies, Composite, Events, Vector, World } from "matter-js";
 import { FRAME_CACHE_SIZE, DELTA, PREVIEW_FRAME_COUNT, CACHES_PER_PREVIEW_POINT, BOUNCY_BLOCK_FACTOR } from "./config";
+import { Notes, Octaves } from "./music";
 
 export type BlockTypes = "marble" | "track-block" | "note-block";
 export type SerializedBody = {
@@ -19,6 +20,9 @@ export type SerializedBody = {
   cameraTracking?: boolean;
   isStatic?: boolean;
   playNote?: boolean;
+  note?: Notes;
+  octave?: Octaves;
+  volume?: number | "auto";
 };
 export type Frame = {
   id: number;
@@ -58,8 +62,8 @@ const engine = Engine.create({
 const world = engine.world;
 const frames: Frame[] = [];
 let initialState: SerializedBody[] = [];
-const physicsToCanvasMap = new Map<number, string>();
 const bodiesMap = new Map<string, Body>();
+const serializedBodiesMap = new Map<number, SerializedBody>();
 let bodiesWithNotes: Body[] = [];
 
 const centerPositionFromTopLeft = (rectangle: SerializedBody) => {
@@ -99,14 +103,24 @@ const getSerializedBody = (body: Body) => {
     y = topLeftPosition.y;
   }
 
-  const serializedBody: SerializedBody = {
-    canvasId: physicsToCanvasMap.get(body.id) || "not found",
+  const originalSerialized = serializedBodiesMap.get(body.id);
+  let serializedBody: SerializedBody = {
+    canvasId: serializedBodiesMap.get(body.id)?.canvasId || "not found",
     physicsId: body.id,
     x,
     y,
     rotation: body.angle,
     playNote: bodiesWithNotes.includes(body),
   };
+
+  if (body.label === "note-block") {
+    serializedBody = {
+      ...serializedBody,
+      note: originalSerialized?.note || "auto",
+      octave: originalSerialized?.octave || "auto",
+      volume: originalSerialized?.volume || "auto",
+    };
+  }
 
   return serializedBody;
 };
@@ -200,7 +214,7 @@ const createAndAddCircle = (circle: SerializedBody) => {
   });
 
   Composite.add(world, circleBody);
-  physicsToCanvasMap.set(circleBody.id, circle.canvasId);
+  serializedBodiesMap.set(circleBody.id, circle);
   bodiesMap.set(circle.canvasId, circleBody);
 
   return getSerializedBody(circleBody);
@@ -222,7 +236,7 @@ const createAndAddRectangle = (rectangle: SerializedBody) => {
   });
 
   Composite.add(world, rectangleBody);
-  physicsToCanvasMap.set(rectangleBody.id, rectangle.canvasId);
+  serializedBodiesMap.set(rectangleBody.id, rectangle);
   bodiesMap.set(rectangle.canvasId, rectangleBody);
 
   return getSerializedBody(rectangleBody);
@@ -234,6 +248,7 @@ const initializeBody = (body: SerializedBody) => {
     Composite.remove(world, physicsBody);
     bodiesMap.delete(body.canvasId);
   }
+
   switch (body.type) {
     case "marble":
       return createAndAddCircle(body);
@@ -247,15 +262,15 @@ const initializeBody = (body: SerializedBody) => {
 };
 
 const removeBody = (physicsId: number) => {
-  const canvasId = physicsToCanvasMap.get(physicsId);
+  const canvasId = serializedBodiesMap.get(physicsId)?.canvasId;
   if (!canvasId) return;
 
   const physicsBody = bodiesMap.get(canvasId);
   if (!physicsBody) throw new TypeError(`There is no body mapped with an id ${canvasId}.`);
 
   Composite.remove(world, physicsBody);
-  physicsToCanvasMap.delete(physicsId);
   bodiesMap.delete(canvasId);
+  serializedBodiesMap.delete(physicsId);
   hasMovingBodies = !!world.bodies.find((body) => !body.isStatic);
 };
 
@@ -264,7 +279,7 @@ const initialize = async (bodies: SerializedBody[]) => {
 
   World.clear(world, false);
   bodiesMap.clear();
-  physicsToCanvasMap.clear();
+  serializedBodiesMap.clear();
 
   for (let i = 0; i < bodies.length; i++) {
     const serializedBody = initializeBody(bodies[i]);

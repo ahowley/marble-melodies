@@ -6,7 +6,7 @@ import { GetSet } from "konva/lib/types";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
 import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
-import { Music } from "./music";
+import { Music, Notes, Octaves } from "./music";
 
 export type GameState = Omit<SerializedBody, "canvasId">[];
 export type GameSettings = {
@@ -260,6 +260,9 @@ export class NoteBlock extends Konva.Rect {
   static yOffset = 6;
   workspace: WorkspaceEditor;
   physicsId?: number;
+  note: Notes;
+  octave: Octaves;
+  volume: number | "auto";
   initialState: SerializedBody;
 
   constructor(
@@ -271,6 +274,9 @@ export class NoteBlock extends Konva.Rect {
     height: number,
     gradientStart: string | number,
     gradientEnd: string | number,
+    note: Notes,
+    octave: Octaves,
+    volume: number | "auto",
     otherOptions: RectConfig = {},
   ) {
     super({
@@ -303,6 +309,9 @@ export class NoteBlock extends Konva.Rect {
       ...otherOptions,
     });
     this.id(`${this._id}`);
+    this.note = note;
+    this.octave = octave;
+    this.volume = volume;
     this.workspace = workspace;
     this.workspace.addBody(this);
     this.initialState = this.serialize();
@@ -346,6 +355,9 @@ export class NoteBlock extends Konva.Rect {
       gradientStart: this.fillLinearGradientColorStops()[1],
       gradientEnd: this.fillLinearGradientColorStops()[3],
       isStatic: true,
+      note: this.note,
+      octave: this.octave,
+      volume: this.volume,
     };
   }
 
@@ -749,6 +761,9 @@ export class WorkspaceEditor {
                 body.height,
                 body.gradientStart,
                 body.gradientEnd,
+                body.note || "auto",
+                body.octave || "auto",
+                body.volume || "auto",
               );
             break;
         }
@@ -804,7 +819,7 @@ export class WorkspaceEditor {
 
       if (nextFrame?.hasNote) {
         const bodyWithNote = nextFrame.bodies.find((body) => body.playNote);
-        if (!nextFrame.playedNote) {
+        if (!nextFrame.playedNote && bodyWithNote) {
           this.music?.playNote(bodyWithNote);
         }
         nextFrame.playedNote = true;

@@ -3,6 +3,7 @@ import * as Tone from "tone";
 import { useGameContext } from "../game_context/GameContext";
 import "./MarbleSynth.scss";
 import { Music } from "../../game/music";
+import { NoteBlock } from "../../game/canvas";
 
 type MarbleSynthProps = {
   showing: boolean;
@@ -34,7 +35,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
     const currentEditor = editor();
     const synth = marbleSynth();
     if (currentEditor && synth) {
-      currentEditor.music = new Music(synth);
+      currentEditor.music = new Music(synth, 0.5);
     }
   });
 
@@ -69,16 +70,18 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
                 max="1"
                 step="0.01"
                 name="volume"
-                value="0.5"
+                value={(singleBodySelected() as NoteBlock)?.volume ?? "0.5"}
               />
             </label>
             <div class="note-selection">
               <label class="label">
                 Note
-                <select name="note" class="dropdown">
-                  <option value="auto" selected>
-                    Auto
-                  </option>
+                <select
+                  name="note"
+                  class="dropdown"
+                  value={(singleBodySelected() as NoteBlock)?.note ?? "auto"}
+                >
+                  <option value="auto">Auto</option>
                   <option value="A">A</option>
                   <option value="A#">A#</option>
                   <option value="B">B</option>
@@ -95,7 +98,11 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
               </label>
               <label class="label">
                 Octave
-                <select name="note" class="dropdown">
+                <select
+                  name="note"
+                  class="dropdown"
+                  value={(singleBodySelected() as NoteBlock)?.octave ?? "auto"}
+                >
                   <option value="auto">Auto</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
