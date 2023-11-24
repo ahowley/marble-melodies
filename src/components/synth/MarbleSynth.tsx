@@ -12,26 +12,11 @@ type MarbleSynthProps = {
 export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   const {
     editor: [editor, _setEditor],
+    synthSettings: [synthSettings, setSynthSettings],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
     marbleSynth: [marbleSynth, setMarbleSynth],
   } = useGameContext();
   let userInteracted = false;
-
-  onMount(() => {
-    const interactListener = async () => {
-      if (userInteracted) return;
-      userInteracted = true;
-
-      await Tone.start();
-      const synth = new Tone.PolySynth().toDestination();
-      setMarbleSynth(new Music(synth, 0.5));
-    };
-
-    document.addEventListener("pointerup", interactListener);
-    onCleanup(() => {
-      document.removeEventListener("pointerup", interactListener);
-    });
-  });
 
   const previewNote = () => {
     const noteBlock = singleBodySelected();
@@ -40,6 +25,20 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
     } else {
       marbleSynth()?.playNote(noteBlock.serialize());
     }
+  };
+
+  const handleChangeVolume = (event: Event) => {
+    const range = event.currentTarget as HTMLInputElement;
+    const synth = marbleSynth();
+    if (!range || !synth) return;
+
+    const newVolume = parseFloat(range.value);
+    synth.volume = newVolume;
+    setSynthSettings({
+      ...synthSettings,
+      volume: newVolume,
+    });
+    props.saveStateToLocalStorage();
   };
 
   const handleChangeNote = (event: Event) => {
@@ -60,7 +59,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
     props.saveStateToLocalStorage();
   };
 
-  const handleChangeVolume = (event: Event) => {
+  const handleChangeNoteVolume = (event: Event) => {
     const range = event.currentTarget as HTMLInputElement;
     const noteBlock = singleBodySelected();
     if (!noteBlock || !(noteBlock instanceof NoteBlock) || !range) return;
@@ -77,6 +76,22 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
     }
   });
 
+  onMount(() => {
+    const interactListener = async () => {
+      if (userInteracted) return;
+      userInteracted = true;
+
+      await Tone.start();
+      const synth = new Tone.PolySynth().toDestination();
+      setMarbleSynth(new Music(synth, synthSettings.volume));
+    };
+
+    document.addEventListener("pointerup", interactListener);
+    onCleanup(() => {
+      document.removeEventListener("pointerup", interactListener);
+    });
+  });
+
   return (
     <section class={`marble-synth ${!props.showing ? "hidden" : ""}`}>
       <form class="controls">
@@ -91,7 +106,8 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
               max="1"
               step="0.01"
               name="volume"
-              value="0.5"
+              value={synthSettings?.volume || 0.5}
+              onChange={handleChangeVolume}
             />
           </label>
         </fieldset>
@@ -109,7 +125,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
                 step="0.01"
                 name="volume"
                 value={(singleBodySelected() as NoteBlock)?.volume ?? "0.5"}
-                onChange={handleChangeVolume}
+                onChange={handleChangeNoteVolume}
               />
             </label>
             <div class="note-selection">

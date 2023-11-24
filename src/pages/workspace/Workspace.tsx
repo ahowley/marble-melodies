@@ -7,8 +7,12 @@ import {
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
-import { useGameContext } from "../../components/game_context/GameContext";
-import { GameSettings, GameState } from "../../game/canvas";
+import {
+  GameSettings,
+  GameState,
+  SynthSettings,
+  useGameContext,
+} from "../../components/game_context/GameContext";
 import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
@@ -18,9 +22,11 @@ export const Workspace: Component = () => {
   const {
     initialState: [_initialState, setInitialState],
     settings: [_settings, setSettings],
+    synthSettings: [_synthSettings, setSynthSettings],
     editor: [editor, _setEditor],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
+    marbleSynth: [marbleSynth, _setMarbleSynth],
   } = useGameContext();
   let details: HTMLDetailsElement;
 
@@ -90,6 +96,9 @@ export const Workspace: Component = () => {
           newSerializedBody.height = nodeBounds.height;
           newSerializedBody.gradientStart = COLORS.accentLight;
           newSerializedBody.gradientEnd = COLORS.accentDark;
+          newSerializedBody.note = "auto";
+          newSerializedBody.octave = "auto";
+          newSerializedBody.volume = 1;
           break;
       }
 
@@ -109,6 +118,11 @@ export const Workspace: Component = () => {
       previewOnPlayback: editor()?.previewOnPlayback ?? false,
     };
     localStorage.setItem("gameSettings", JSON.stringify(settings));
+
+    const synthSettings: SynthSettings = {
+      volume: marbleSynth()?.volume || 0.5,
+    };
+    localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
   };
 
   const handleSave = (newState: GameState) => {
@@ -128,6 +142,14 @@ export const Workspace: Component = () => {
       : null;
     if (savedSettings) {
       setSettings(savedSettings);
+    }
+
+    const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
+    const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
+      ? JSON.parse(savedSynthSettingsJSON)
+      : null;
+    if (savedSynthSettings) {
+      setSynthSettings(savedSynthSettings);
     }
   });
 

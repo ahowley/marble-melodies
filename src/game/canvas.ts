@@ -3,15 +3,12 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { CircleConfig } from "konva/lib/shapes/Circle";
 import { RectConfig } from "konva/lib/shapes/Rect";
 import { GetSet } from "konva/lib/types";
+import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
+import { GameSettings } from "../components/game_context/GameContext";
 import { Frame, SerializedBody, WorkerAction } from "./physics";
 import { radToDeg, degToRad, lerp } from "./common";
-import { COLORS, DELTA, FRAME_CACHE_SIZE, SCALE_BY } from "./config";
 import { Music, Notes, Octaves } from "./music";
 
-export type GameState = Omit<SerializedBody, "canvasId">[];
-export type GameSettings = {
-  previewOnPlayback: boolean;
-};
 export type Body = Marble | TrackBlock | NoteBlock;
 type CanvasMessageData = {
   action: WorkerAction;
@@ -262,7 +259,7 @@ export class NoteBlock extends Konva.Rect {
   physicsId?: number;
   note: Notes;
   octave: Octaves;
-  volume: number | "auto";
+  volume: number;
   initialState: SerializedBody;
 
   constructor(
@@ -276,7 +273,7 @@ export class NoteBlock extends Konva.Rect {
     gradientEnd: string | number,
     note: Notes,
     octave: Octaves,
-    volume: number | "auto",
+    volume: number,
     otherOptions: RectConfig = {},
   ) {
     super({
@@ -368,7 +365,6 @@ export class NoteBlock extends Konva.Rect {
   }
 
   changeOctave(newOctave: Octaves) {
-    console.log(newOctave);
     this.octave = newOctave;
     this.initialState = this.serialize();
     this.workspace.initialize();
@@ -770,7 +766,7 @@ export class WorkspaceEditor {
               );
             break;
           case "note-block":
-            if (body.width && body.height && body.gradientStart && body.gradientEnd)
+            if (body.width && body.height && body.gradientStart && body.gradientEnd && body.volume)
               new NoteBlock(
                 this,
                 body.x,
@@ -782,7 +778,7 @@ export class WorkspaceEditor {
                 body.gradientEnd,
                 body.note || "auto",
                 body.octave || "auto",
-                body.volume || "auto",
+                body.volume,
               );
             break;
         }

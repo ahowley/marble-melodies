@@ -22,7 +22,7 @@ export type SerializedBody = {
   playNote?: boolean;
   note?: Notes;
   octave?: Octaves;
-  volume?: number | "auto";
+  volume?: number;
 };
 export type Frame = {
   id: number;
@@ -118,7 +118,7 @@ const getSerializedBody = (body: Body) => {
       ...serializedBody,
       note: originalSerialized?.note || "auto",
       octave: originalSerialized?.octave || "auto",
-      volume: originalSerialized?.volume || "auto",
+      volume: originalSerialized?.volume,
     };
   }
 
@@ -173,7 +173,12 @@ const renderPreview = async () => {
 };
 
 setInterval(async () => {
-  if (performance.now() - lastPreviewTime > 60 && !previewing && !noPreview && previewQueued) {
+  if (
+    performance.now() - lastPreviewTime > 60 * (Math.log(world.bodies.length) + 1) &&
+    !previewing &&
+    !noPreview &&
+    previewQueued
+  ) {
     previewing = true;
     previewQueued = false;
     await renderPreview();

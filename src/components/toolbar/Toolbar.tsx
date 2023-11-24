@@ -1,8 +1,8 @@
 import { Component, Ref } from "solid-js";
-import { useGameContext } from "../game_context/GameContext";
+import { GameSettings, useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
-import { GameSettings, Marble } from "../../game/canvas";
+import { Marble } from "../../game/canvas";
 import { MarbleSynth } from "../synth/MarbleSynth";
 import "./Toolbar.scss";
 

@@ -14,14 +14,16 @@ export class Music {
   }
 
   playPreviewNote() {
-    this.marbleSynth.triggerAttack("C4", Tone.now(), 0.5);
+    this.marbleSynth.triggerAttack("C4", Tone.now(), this.volume);
     this.marbleSynth.triggerRelease("C4", Tone.now() + 0.1);
   }
 
   playNote(body: SerializedBody) {
-    let note = body.note === "auto" || !body.note ? "C" : body.note;
-    let octave = body.octave === "auto" || !body.octave ? "4" : body.octave;
-    let volume = body.volume === "auto" || !body.volume ? this.volume : body.volume;
+    if (body.note === undefined || body.octave === undefined || body.volume === undefined) return;
+
+    let note = body.note === "auto" ? "C" : body.note;
+    let octave = body.octave === "auto" ? "4" : body.octave;
+    let volume = body.volume * this.volume;
     this.marbleSynth.triggerAttack(`${note}${octave}`, Tone.now(), volume);
     this.marbleSynth.triggerRelease(`${note}${octave}`, Tone.now() + 0.1);
   }
