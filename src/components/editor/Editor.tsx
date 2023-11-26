@@ -58,6 +58,7 @@ export const Editor: Component<EditorProps> = (props) => {
       );
       if (newState) {
         editor()?.initialize(newState);
+        props.saveStateToLocalStorage();
       }
     }
   };
@@ -104,8 +105,11 @@ export const Editor: Component<EditorProps> = (props) => {
 
     const draggingBodies = editor()?.draggingBodies;
     if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
-      draggingBodies.map((draggingBody) => (draggingBody.initialState = draggingBody.serialize()));
+      draggingBodies.forEach(
+        (draggingBody) => (draggingBody.initialState = draggingBody.serialize()),
+      );
       editor()?.initialize();
+      props.saveStateToLocalStorage();
     }
   };
 
