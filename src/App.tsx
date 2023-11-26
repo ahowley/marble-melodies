@@ -27,7 +27,7 @@ export const App: Component = () => {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/account" component={Account} />
-          <Route path="/track/*" component={Game} />
+          <Route path={["/track", "/track/:id"]} component={Game} />
           <Route path={["/404", "/*"]} component={NotFound} />
         </Routes>
       </UserProvider>
