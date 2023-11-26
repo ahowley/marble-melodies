@@ -8,8 +8,6 @@ export const Register: Component = () => {
   const [invalidMessage, setInvalidMessage] = createSignal("");
   const [invalid, setInvalid] = createSignal("");
   const {
-    userId: [userId, setUserId],
-    jwt: [jwt, setJwt],
     server: { register },
   } = useUserContext();
   const navigate = useNavigate();
@@ -32,9 +30,9 @@ export const Register: Component = () => {
 
     setSubmitting(true);
     const { status, data } = await register({ username, password });
-    if (status === 400) {
+    if (status === 400 || status === 500) {
       const firstError = data.errors?.length && data.errors[0];
-      if (!firstError) {
+      if (!firstError || status === 500) {
         setSubmitting(false);
         return setInvalidMessage("Something went wrong - sorry! Wait a few seconds and try again.");
       }
@@ -46,8 +44,8 @@ export const Register: Component = () => {
 
     setSubmitting(false);
     setInvalid("");
-    setInvalidMessage("Account created!");
-    setTimeout(() => navigate("/"), 1000);
+    setInvalidMessage("");
+    navigate(-1);
   };
 
   return (

@@ -1,0 +1,18 @@
+@use "../../styles/util" as *;
+
+.not-found {
+  @include text-page;
+  gap: 1rem;
+
+  .status {
+    @include heading;
+  }
+
+  .subheading {
+    @include subheading;
+  }
+
+  a {
+    @include link;
+  }
+}

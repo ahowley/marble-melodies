@@ -70,6 +70,17 @@ $colors: (
   }
 }
 
+@mixin link {
+  text-align: center;
+  color: #{color("highlight")};
+  margin-top: -1rem;
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
 @mixin button {
   display: flex;
   justify-content: center;
@@ -108,6 +119,23 @@ $colors: (
 
   &.invalid {
     outline: 3px solid #{color("accent-dark")};
+  }
+}
+
+@mixin text-page {
+  @include body;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  place-items: center;
+  width: 100%;
+  min-height: 100svh;
+
+  .marble {
+    animation: marble-bouncing;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
   }
 }
 
@@ -178,13 +206,6 @@ $colors: (
   }
 
   .create-account {
-    text-align: center;
-    color: #{color("highlight")};
-    margin-top: -1rem;
-    text-decoration: underline;
-
-    &:hover {
-      text-decoration: none;
-    }
+    @include link;
   }
 }

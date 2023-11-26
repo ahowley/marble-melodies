@@ -5,6 +5,7 @@ type ServerResponse = {
   status: number;
   data: {
     id?: number;
+    token?: string;
     user_id?: number;
     initialState?: GameState;
     previewOnPlayback?: boolean;
@@ -21,11 +22,12 @@ type LoginBody = {
 
 type AuthContext = {
   lastVisitedTrackId: [() => string | null, (id: string | null) => void];
-  userId: [() => string | null, (id: string) => void];
+  userId: [() => number | null, (id: number) => void];
   jwt: [() => string | null, (id: string) => void];
   logout: () => void;
   server: {
     register: (postBody: LoginBody) => Promise<ServerResponse>;
+    login: (postBody: LoginBody) => Promise<ServerResponse>;
     getTrack: (id: string) => Promise<ServerResponse>;
   };
 };
@@ -62,8 +64,12 @@ const authContext: AuthContext = {
         : sessionStorage.removeItem("lastVisitedTrackId"),
   ],
   userId: [
-    () => localStorage.getItem("userId") || null,
-    (id: string) => localStorage.setItem("userId", id),
+    () => {
+      const loggedId = localStorage.getItem("userId");
+      if (loggedId) return parseInt(loggedId);
+      return null;
+    },
+    (id: number) => localStorage.setItem("userId", `${id}`),
   ],
   jwt: [
     () => localStorage.getItem("token") || null,
@@ -76,6 +82,7 @@ const authContext: AuthContext = {
   server: {
     register: async (postBody: LoginBody) =>
       await serverRequest("POST", "/user/register", postBody),
+    login: async (postBody: LoginBody) => await serverRequest("POST", "/user/login", postBody),
     getTrack: async (id: string) => await serverRequest("GET", `/track/${id}`),
   },
 };

@@ -1,17 +1,5 @@
 @use "../../styles/util" as *;
 
 .workspace-loading {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  place-items: center;
-  width: 100%;
-  min-height: 100svh;
-
-  .marble {
-    animation: marble-bouncing;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-  }
+  @include text-page;
 }

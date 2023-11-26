@@ -86,7 +86,7 @@ export const Workspace: Component = () => {
     const { status, data } = await getTrack(trackId);
     if (status === 404) {
       setLastVisitedTrackId(null);
-      navigate("/track", {});
+      navigate("/404");
       return loadStateFromLocalStorage();
     }
 
@@ -200,6 +200,7 @@ export const Workspace: Component = () => {
     } else if (lastVisited === id) {
       loadStateFromLocalStorage();
     } else {
+      setLastVisitedTrackId(id);
       loadStateFromServer(id);
     }
   } else {
