@@ -16,13 +16,9 @@
   }
 
   .preview {
+    @include button;
     position: absolute;
     inset: auto 1rem 1rem auto;
-    display: flex;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    font-weight: bold;
-    background-color: #{color("accent-light")};
   }
 
   .legend {

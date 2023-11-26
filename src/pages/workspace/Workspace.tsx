@@ -1,4 +1,4 @@
-import { type Component, onMount } from "solid-js";
+import { type Component } from "solid-js";
 import {
   DragDropProvider,
   DragDropSensors,
@@ -29,6 +29,28 @@ export const Workspace: Component = () => {
     marbleSynth: [marbleSynth, _setMarbleSynth],
   } = useGameContext();
   let details: HTMLDetailsElement;
+
+  const savedStateJSON = localStorage.getItem("lastTrackState");
+  const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
+  if (savedState) {
+    setInitialState(savedState);
+  }
+
+  const savedSettingsJSON = localStorage.getItem("gameSettings");
+  const savedSettings: GameSettings | null = savedSettingsJSON
+    ? JSON.parse(savedSettingsJSON)
+    : null;
+  if (savedSettings) {
+    setSettings(savedSettings);
+  }
+
+  const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
+  const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
+    ? JSON.parse(savedSynthSettingsJSON)
+    : null;
+  if (savedSynthSettings) {
+    setSynthSettings(savedSynthSettings);
+  }
 
   const closeToolbar = () => {
     setOpenState("closing");
@@ -128,30 +150,6 @@ export const Workspace: Component = () => {
   const handleSave = (newState: GameState) => {
     setInitialState(newState);
   };
-
-  onMount(() => {
-    const savedStateJSON = localStorage.getItem("lastTrackState");
-    const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
-    if (savedState) {
-      setInitialState(savedState);
-    }
-
-    const savedSettingsJSON = localStorage.getItem("gameSettings");
-    const savedSettings: GameSettings | null = savedSettingsJSON
-      ? JSON.parse(savedSettingsJSON)
-      : null;
-    if (savedSettings) {
-      setSettings(savedSettings);
-    }
-
-    const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
-    const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
-      ? JSON.parse(savedSynthSettingsJSON)
-      : null;
-    if (savedSynthSettings) {
-      setSynthSettings(savedSynthSettings);
-    }
-  });
 
   return (
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>

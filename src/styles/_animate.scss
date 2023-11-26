@@ -1,0 +1,13 @@
+@keyframes marble-bouncing {
+  0% {
+    top: 0;
+    animation-timing-function: ease-out;
+  }
+  50% {
+    top: -10rem;
+    animation-timing-function: ease-in;
+  }
+  100% {
+    top: 0;
+  }
+}
