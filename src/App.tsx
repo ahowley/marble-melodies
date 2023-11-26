@@ -23,7 +23,7 @@ export const App: Component = () => {
       <UserProvider>
         <Header />
         <Routes>
-          <Route path="/" component={Home} />
+          <Route path={["/", "/logout"]} component={Home} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/account" component={Account} />

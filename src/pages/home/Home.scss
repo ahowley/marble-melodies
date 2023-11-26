@@ -1,0 +1,24 @@
+@use "../../styles/util" as *;
+
+.home {
+  @include text-page;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 30rem;
+  padding: 1rem;
+
+  .heading {
+    @include heading;
+    align-self: flex-start;
+  }
+
+  .description {
+    @include body;
+    align-self: flex-start;
+  }
+
+  .button {
+    @include button;
+    align-self: flex-end;
+  }
+}

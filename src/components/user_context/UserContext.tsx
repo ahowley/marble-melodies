@@ -77,7 +77,7 @@ const authContext: AuthContext = {
   ],
   logout: () => {
     localStorage.removeItem("userId");
-    localStorage.removeItem("jwt");
+    localStorage.removeItem("token");
   },
   server: {
     register: async (postBody: LoginBody) =>

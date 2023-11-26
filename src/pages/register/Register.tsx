@@ -45,7 +45,7 @@ export const Register: Component = () => {
     setSubmitting(false);
     setInvalid("");
     setInvalidMessage("");
-    navigate(-1);
+    navigate("/login");
   };
 
   return (
