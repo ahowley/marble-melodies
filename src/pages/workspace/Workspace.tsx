@@ -112,11 +112,15 @@ export const Workspace: Component = () => {
     setIsLoading(false);
   };
 
+  const lastVisited = lastVisitedTrackId();
   if (id) {
     setLastVisitedTrackId(id);
-    loadStateFromServer(id);
+    if (lastVisited === id) {
+      loadStateFromLocalStorage();
+    } else {
+      loadStateFromServer(id);
+    }
   } else {
-    const lastVisited = lastVisitedTrackId();
     if (lastVisited) {
       navigate(`/track/${lastVisited}`, { replace: true, resolve: false });
       setLastVisitedTrackId(null);
