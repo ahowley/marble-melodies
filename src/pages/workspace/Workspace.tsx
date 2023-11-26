@@ -1,5 +1,5 @@
-import { createSignal, type Component, Show } from "solid-js";
-import { useParams } from "@solidjs/router";
+import { createSignal, type Component, Show, onMount, createEffect } from "solid-js";
+import { useNavigate, useParams } from "@solidjs/router";
 import {
   DragDropProvider,
   DragDropSensors,
@@ -19,18 +19,16 @@ import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
 
-const WorkspaceLoading: Component = () => (
-  <main class="workspace-loading">Loading workspace...</main>
-);
-
 export const Workspace: Component = () => {
+  const navigate = useNavigate();
   const {
-    userId: [userId, setUserId],
+    lastVisitedTrackId: [lastVisitedTrackId, setLastVisitedTrackId],
+    server: { getTrack },
   } = useUserContext();
   const {
     initialState: [_initialState, setInitialState],
-    settings: [_settings, setSettings],
-    synthSettings: [_synthSettings, setSynthSettings],
+    settings: [settings, setSettings],
+    synthSettings: [synthSettings, setSynthSettings],
     editor: [editor, _setEditor],
     openState: [_openState, setOpenState],
     selectedTab: [selectedTab, setSelectedTab],
@@ -41,8 +39,50 @@ export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
 
-  const loadStateFromServer = async () => {
-    console.log(id);
+  const saveStateToLocalStorage = () => {
+    const initialState = editor()?.initialState;
+    if (initialState?.length) {
+      localStorage.setItem("lastTrackState", JSON.stringify(initialState));
+    }
+
+    const settings: GameSettings = {
+      previewOnPlayback: editor()?.previewOnPlayback ?? false,
+    };
+    localStorage.setItem("gameSettings", JSON.stringify(settings));
+
+    const synthSettings: SynthSettings = {
+      volume: marbleSynth()?.volume || 0.5,
+    };
+    localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
+  };
+
+  const handleSave = (newState: GameState) => {
+    setInitialState(newState);
+  };
+
+  const loadStateFromServer = async (trackId: string) => {
+    const { status, data } = await getTrack(trackId);
+    if (status === 404) {
+      setLastVisitedTrackId(null);
+      navigate("/track", {});
+      return loadStateFromLocalStorage();
+    }
+
+    if (data.previewOnPlayback) {
+      setSettings({
+        ...settings,
+        previewOnPlayback: data.previewOnPlayback,
+      });
+    }
+    if (data.volume !== undefined) {
+      setSynthSettings({
+        ...synthSettings,
+        volume: data.volume,
+      });
+    }
+    if (data.initialState) {
+      setInitialState(data.initialState);
+    }
     setIsLoading(false);
   };
 
@@ -73,10 +113,17 @@ export const Workspace: Component = () => {
   };
 
   if (id) {
-    sessionStorage.setItem("lastVisitedTrackId", id);
-    loadStateFromServer();
+    setLastVisitedTrackId(id);
+    loadStateFromServer(id);
   } else {
-    loadStateFromLocalStorage();
+    const lastVisited = lastVisitedTrackId();
+    if (lastVisited) {
+      navigate(`/track/${lastVisited}`, { replace: true, resolve: false });
+      setLastVisitedTrackId(null);
+      loadStateFromServer(lastVisited);
+    } else {
+      loadStateFromLocalStorage();
+    }
   }
 
   const closeToolbar = () => {
@@ -157,43 +204,32 @@ export const Workspace: Component = () => {
     }
   };
 
-  const saveStateToLocalStorage = () => {
-    const initialState = editor()?.initialState;
-    if (initialState?.length) {
-      localStorage.setItem("lastTrackState", JSON.stringify(initialState));
-    }
-
-    const settings: GameSettings = {
-      previewOnPlayback: editor()?.previewOnPlayback ?? false,
-    };
-    localStorage.setItem("gameSettings", JSON.stringify(settings));
-
-    const synthSettings: SynthSettings = {
-      volume: marbleSynth()?.volume || 0.5,
-    };
-    localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
-  };
-
-  const handleSave = (newState: GameState) => {
-    setInitialState(newState);
-  };
-
-  return !isLoading() ? (
-    <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
-      <DragDropSensors />
-      <Editor
-        handleSave={handleSave}
-        saveStateToLocalStorage={saveStateToLocalStorage}
-        closeToolbar={closeToolbar}
-      />
-      <Toolbar
-        ref={details!}
-        saveStateToLocalStorage={saveStateToLocalStorage}
-        toggleToolbarOpen={toggleToolbarOpen}
-      />
-      <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
-    </DragDropProvider>
-  ) : (
-    <WorkspaceLoading />
+  return (
+    <Show
+      when={!isLoading()}
+      fallback={
+        <main class="workspace-loading">
+          <div class="marble" />
+          Loading workspace...
+        </main>
+      }
+    >
+      <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
+        <DragDropSensors />
+        <Editor
+          handleSave={handleSave}
+          saveStateToLocalStorage={saveStateToLocalStorage}
+          closeToolbar={closeToolbar}
+        />
+        <Toolbar
+          ref={details!}
+          saveStateToLocalStorage={saveStateToLocalStorage}
+          toggleToolbarOpen={toggleToolbarOpen}
+        />
+        <DragOverlay>
+          {(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}
+        </DragOverlay>
+      </DragDropProvider>
+    </Show>
   );
 };
