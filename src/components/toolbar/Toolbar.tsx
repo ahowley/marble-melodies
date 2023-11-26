@@ -15,9 +15,11 @@ type ToolbarProps = {
   saveStateToLocalStorage: () => void;
   toggleToolbarOpen: (event: MouseEvent) => void;
   handleSave: (event: SubmitEvent) => void;
+  handleDelete: () => void;
   userOwnsTrack: boolean;
   failureMessage: string;
   isSaving: boolean;
+  saveWasSuccessful: boolean;
   trackName: string | null;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
@@ -26,6 +28,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   } = useUserContext();
   const {
     editor: [editor, _setEditor],
+    initialState: [initialState, _setInitialState],
     settings: [settings, _setSettings],
     stopped: [stopped, _setStopped],
     singleBodySelected: [singleBodySelected, _setSingleBodySelected],
@@ -139,7 +142,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             </label>
             {userId() ? (
               <label class="text-label">
-                Track Name
+                Name
                 <input type="text" class="input" name="trackname" value={props.trackName || ""} />
               </label>
             ) : (
@@ -148,17 +151,21 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               </p>
             )}
             <div class="buttons">
-              {userId() && (
+              {userId() && initialState?.length && (
                 <button type="submit" class="button">
-                  Save
+                  Save{!props.userOwnsTrack ? " as" : ""}
                 </button>
               )}
               {props.userOwnsTrack && (
-                <button type="button" class="button">
+                <button type="button" class="button" onClick={props.handleDelete}>
                   Delete Track
                 </button>
               )}
-              {props.failureMessage && <p class="failure-message">{props.failureMessage}</p>}
+              {props.failureMessage && (
+                <p class={`failure-message ${props.saveWasSuccessful ? "success-message" : ""}`}>
+                  {props.failureMessage}
+                </p>
+              )}
             </div>
           </form>
         )}

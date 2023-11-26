@@ -73,8 +73,12 @@ const serverRequest = async (
 
   const response = await fetch(`${backendUrl}${endpoint}`, options);
   const { status } = response;
-  const data = await response.json();
-  return { status, data };
+  if (status !== 204) {
+    const data = await response.json();
+    return { status, data };
+  }
+
+  return { status, data: {} };
 };
 
 const authContext: AuthContext = {

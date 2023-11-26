@@ -44,6 +44,7 @@ export const Workspace: Component = () => {
   const [isSaving, setIsSaving] = createSignal(false);
   const [userOwnsTrack, setUserOwnsTrack] = createSignal(false);
   const [failureMessage, setFailureMessage] = createSignal("");
+  const [saveWasSuccessful, setSaveWasSuccessful] = createSignal(false);
   const params = useParams();
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
@@ -52,17 +53,23 @@ export const Workspace: Component = () => {
     const initialState = editor()?.initialState;
     if (initialState?.length) {
       localStorage.setItem("lastTrackState", JSON.stringify(initialState));
+      setInitialState(initialState);
+    } else if (initialState?.length === 0) {
+      localStorage.removeItem("lastTrackState");
+      setInitialState([]);
     }
 
     const settings: GameSettings = {
       previewOnPlayback: editor()?.previewOnPlayback ?? false,
     };
     localStorage.setItem("gameSettings", JSON.stringify(settings));
+    setSettings(settings);
 
     const synthSettings: SynthSettings = {
       volume: marbleSynth()?.volume || 0.5,
     };
     localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
+    setSynthSettings(synthSettings);
   };
 
   const loadStateFromLocalStorage = async () => {
@@ -90,6 +97,12 @@ export const Workspace: Component = () => {
 
     setUserOwnsTrack(false);
     setIsLoading(false);
+  };
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem("lastTrackState");
+    localStorage.removeItem("gameSettings");
+    localStorage.removeItem("synthSettings");
   };
 
   const loadStateFromServer = async (trackId: string) => {
@@ -177,9 +190,41 @@ export const Workspace: Component = () => {
     }
 
     setFailureMessage(message as string);
-    navigate(`/track/${trackId}`);
+    setIsSaving(false);
+    setSaveWasSuccessful(true);
     setLastVisitedTrackId(`${trackId}`);
-    location.reload();
+    window.location.replace(`/track/${trackId}`);
+  };
+
+  const handleDelete = async () => {
+    setIsSaving(true);
+    const { status } = await deleteTrack(params.id);
+    if (!status || status === 500) {
+      setIsSaving(false);
+      return setFailureMessage("Something went wrong - sorry! Wait a few seconds and try again.");
+    }
+
+    if (status === 401) {
+      setIsSaving(false);
+      return setFailureMessage("Sorry, you need to be logged in to delete a track.");
+    }
+    if (status === 403) {
+      setIsSaving(false);
+      return setFailureMessage("This isn't your track to delete!");
+    }
+    if (status === 404) {
+      setIsSaving(false);
+      return setFailureMessage(
+        "Sorry, we couldn't find the track in our database. Try refreshing, this track may have already been deleted.",
+      );
+    }
+
+    setIsSaving(false);
+    setSaveWasSuccessful(true);
+    setFailureMessage("The track was successfully deleted!");
+    clearLocalStorage();
+    setLastVisitedTrackId(null);
+    window.location.replace("/track/new");
   };
 
   const closeToolbar = () => {
@@ -264,6 +309,7 @@ export const Workspace: Component = () => {
   const lastVisited = lastVisitedTrackId();
   if (params.id) {
     if (params.id === "new") {
+      clearLocalStorage();
       setLastVisitedTrackId(null);
       navigate("/track");
       setIsLoading(false);
@@ -299,9 +345,11 @@ export const Workspace: Component = () => {
           saveStateToLocalStorage={saveStateToLocalStorage}
           toggleToolbarOpen={toggleToolbarOpen}
           handleSave={handleSave}
+          handleDelete={handleDelete}
           userOwnsTrack={userOwnsTrack()}
           failureMessage={failureMessage()}
           isSaving={isSaving()}
+          saveWasSuccessful={saveWasSuccessful()}
           trackName={trackName()}
         />
         <DragOverlay>
