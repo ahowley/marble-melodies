@@ -6,12 +6,17 @@
   display: flex;
   justify-content: center;
   gap: 2rem;
-  padding-top: 2rem;
+  padding-top: 3.5rem;
+
+  @include tablet {
+    padding-top: 0.25rem;
+  }
 
   .button {
     position: relative;
     z-index: 10;
     display: grid;
+    font-size: 0;
 
     &.hidden {
       display: none;

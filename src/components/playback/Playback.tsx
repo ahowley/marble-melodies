@@ -1,8 +1,8 @@
-import { Component, Accessor } from "solid-js";
-import "./Playback.scss";
+import { Component } from "solid-js";
 import play from "../../assets/site/play.svg";
 import pause from "../../assets/site/pause.svg";
 import stop from "../../assets/site/stop.svg";
+import "./Playback.scss";
 
 type PlaybackProps = {
   playing: boolean;

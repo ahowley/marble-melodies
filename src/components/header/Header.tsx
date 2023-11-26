@@ -5,7 +5,7 @@ import "./Header.scss";
 export const Header: Component = () => (
   <header class="header">
     <A href="/">
-      <h1 class="heading">Home</h1>
+      <h1 class="heading">Marble Melodies</h1>
     </A>
   </header>
 );
