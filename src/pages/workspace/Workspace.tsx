@@ -56,8 +56,30 @@ export const Workspace: Component = () => {
     localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
   };
 
-  const handleSave = (newState: GameState) => {
-    setInitialState(newState);
+  const loadStateFromLocalStorage = async () => {
+    const savedStateJSON = localStorage.getItem("lastTrackState");
+    const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
+    if (savedState) {
+      setInitialState(savedState);
+    }
+
+    const savedSettingsJSON = localStorage.getItem("gameSettings");
+    const savedSettings: GameSettings | null = savedSettingsJSON
+      ? JSON.parse(savedSettingsJSON)
+      : null;
+    if (savedSettings) {
+      setSettings(savedSettings);
+    }
+
+    const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
+    const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
+      ? JSON.parse(savedSynthSettingsJSON)
+      : null;
+    if (savedSynthSettings) {
+      setSynthSettings(savedSynthSettings);
+    }
+
+    setIsLoading(false);
   };
 
   const loadStateFromServer = async (trackId: string) => {
@@ -86,49 +108,9 @@ export const Workspace: Component = () => {
     setIsLoading(false);
   };
 
-  const loadStateFromLocalStorage = async () => {
-    const savedStateJSON = localStorage.getItem("lastTrackState");
-    const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
-    if (savedState) {
-      setInitialState(savedState);
-    }
-
-    const savedSettingsJSON = localStorage.getItem("gameSettings");
-    const savedSettings: GameSettings | null = savedSettingsJSON
-      ? JSON.parse(savedSettingsJSON)
-      : null;
-    if (savedSettings) {
-      setSettings(savedSettings);
-    }
-
-    const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
-    const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
-      ? JSON.parse(savedSynthSettingsJSON)
-      : null;
-    if (savedSynthSettings) {
-      setSynthSettings(savedSynthSettings);
-    }
-
-    setIsLoading(false);
+  const handleSave = (newState: GameState) => {
+    setInitialState(newState);
   };
-
-  const lastVisited = lastVisitedTrackId();
-  if (id) {
-    setLastVisitedTrackId(id);
-    if (lastVisited === id) {
-      loadStateFromLocalStorage();
-    } else {
-      loadStateFromServer(id);
-    }
-  } else {
-    if (lastVisited) {
-      navigate(`/track/${lastVisited}`, { replace: true, resolve: false });
-      setLastVisitedTrackId(null);
-      loadStateFromServer(lastVisited);
-    } else {
-      loadStateFromLocalStorage();
-    }
-  }
 
   const closeToolbar = () => {
     setOpenState("closing");
@@ -208,6 +190,27 @@ export const Workspace: Component = () => {
       }
     }
   };
+
+  const lastVisited = lastVisitedTrackId();
+  if (id) {
+    if (id === "new") {
+      setLastVisitedTrackId(null);
+      navigate("/track");
+      setIsLoading(false);
+    } else if (lastVisited === id) {
+      loadStateFromLocalStorage();
+    } else {
+      loadStateFromServer(id);
+    }
+  } else {
+    if (lastVisited) {
+      navigate(`/track/${lastVisited}`, { replace: true, resolve: false });
+      setLastVisitedTrackId(null);
+      loadStateFromServer(lastVisited);
+    } else {
+      loadStateFromLocalStorage();
+    }
+  }
 
   return (
     <Show

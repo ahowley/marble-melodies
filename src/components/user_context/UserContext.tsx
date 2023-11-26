@@ -12,6 +12,16 @@ type ServerResponse = {
   };
 };
 
+type AuthContext = {
+  lastVisitedTrackId: [() => string | null, (id: string | null) => void];
+  userId: [() => string | null, (id: string) => void];
+  jwt: [() => string | null, (id: string) => void];
+  logout: () => void;
+  server: {
+    getTrack: (id: string) => Promise<ServerResponse>;
+  };
+};
+
 const backendUrl = import.meta.env.VITE_BACKEND;
 const serverRequest = async (
   method: "GET" | "POST" | "PUT" | "DELETE",
@@ -33,16 +43,6 @@ const serverRequest = async (
   const { status } = response;
   const data = await response.json();
   return { status, data };
-};
-
-type AuthContext = {
-  lastVisitedTrackId: [() => string | null, (id: string | null) => void];
-  userId: [() => string | null, (id: string) => void];
-  jwt: [() => string | null, (id: string) => void];
-  logout: () => void;
-  server: {
-    getTrack: (id: string) => Promise<ServerResponse>;
-  };
 };
 
 const authContext: AuthContext = {
