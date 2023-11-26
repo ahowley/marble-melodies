@@ -2,7 +2,7 @@ import * as Tone from "tone";
 import { SerializedBody } from "./physics";
 
 export type Notes = "auto" | "A" | "A#" | "B" | "C" | "C#" | "D" | "D#" | "E" | "F" | "F#" | "G" | "G#";
-export type Octaves = "auto" | "A" | "A#" | "B" | "C" | "C#" | "D" | "D#" | "E" | "F" | "F#" | "G" | "G#";
+export type Octaves = "auto" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
 export class Music {
   marbleSynth: Tone.PolySynth;
