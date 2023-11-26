@@ -421,7 +421,7 @@ export class WorkspaceEditor {
   ) {
     Konva.dragButtons = [0];
     this.container = container;
-    this.physics = new Worker("./src/game/physics.ts", { type: "module" });
+    this.physics = new Worker("/src/game/physics.ts", { type: "module" });
     this.physicsBusy = false;
     this.bodies = [];
     this.bodiesMap = new Map();

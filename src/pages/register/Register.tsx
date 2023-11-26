@@ -1,8 +1,13 @@
 import { type Component } from "solid-js";
 import { A } from "@solidjs/router";
+import { useUserContext } from "../../components/user_context/UserContext";
 import "./Register.scss";
 
 export const Register: Component = () => {
+  const {
+    userId: [userId, setUserId],
+  } = useUserContext();
+
   return (
     <form class="registration">
       <div class="marble" />

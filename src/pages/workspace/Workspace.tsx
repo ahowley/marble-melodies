@@ -1,4 +1,5 @@
-import { type Component } from "solid-js";
+import { createSignal, type Component, Show } from "solid-js";
+import { useParams } from "@solidjs/router";
 import {
   DragDropProvider,
   DragDropSensors,
@@ -7,6 +8,7 @@ import {
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
+import { useUserContext } from "../../components/user_context/UserContext";
 import {
   GameSettings,
   GameState,
@@ -17,8 +19,14 @@ import { SerializedBody, BlockTypes } from "../../game/physics";
 import { COLORS } from "../../game/config";
 import "./Workspace.scss";
 
+const WorkspaceLoading: Component = () => (
+  <main class="workspace-loading">Loading workspace...</main>
+);
+
 export const Workspace: Component = () => {
-  let transform = { x: 0, y: 0 };
+  const {
+    userId: [userId, setUserId],
+  } = useUserContext();
   const {
     initialState: [_initialState, setInitialState],
     settings: [_settings, setSettings],
@@ -28,28 +36,47 @@ export const Workspace: Component = () => {
     selectedTab: [selectedTab, setSelectedTab],
     marbleSynth: [marbleSynth, _setMarbleSynth],
   } = useGameContext();
+  const [isLoading, setIsLoading] = createSignal(true);
+  const { id } = useParams();
+  let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
 
-  const savedStateJSON = localStorage.getItem("lastTrackState");
-  const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
-  if (savedState) {
-    setInitialState(savedState);
-  }
+  const loadStateFromServer = async () => {
+    console.log(id);
+    setIsLoading(false);
+  };
 
-  const savedSettingsJSON = localStorage.getItem("gameSettings");
-  const savedSettings: GameSettings | null = savedSettingsJSON
-    ? JSON.parse(savedSettingsJSON)
-    : null;
-  if (savedSettings) {
-    setSettings(savedSettings);
-  }
+  const loadStateFromLocalStorage = async () => {
+    const savedStateJSON = localStorage.getItem("lastTrackState");
+    const savedState: GameState | null = savedStateJSON ? JSON.parse(savedStateJSON) : null;
+    if (savedState) {
+      setInitialState(savedState);
+    }
 
-  const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
-  const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
-    ? JSON.parse(savedSynthSettingsJSON)
-    : null;
-  if (savedSynthSettings) {
-    setSynthSettings(savedSynthSettings);
+    const savedSettingsJSON = localStorage.getItem("gameSettings");
+    const savedSettings: GameSettings | null = savedSettingsJSON
+      ? JSON.parse(savedSettingsJSON)
+      : null;
+    if (savedSettings) {
+      setSettings(savedSettings);
+    }
+
+    const savedSynthSettingsJSON = localStorage.getItem("synthSettings");
+    const savedSynthSettings: SynthSettings | null = savedSynthSettingsJSON
+      ? JSON.parse(savedSynthSettingsJSON)
+      : null;
+    if (savedSynthSettings) {
+      setSynthSettings(savedSynthSettings);
+    }
+
+    setIsLoading(false);
+  };
+
+  if (id) {
+    sessionStorage.setItem("lastVisitedTrackId", id);
+    loadStateFromServer();
+  } else {
+    loadStateFromLocalStorage();
   }
 
   const closeToolbar = () => {
@@ -151,7 +178,7 @@ export const Workspace: Component = () => {
     setInitialState(newState);
   };
 
-  return (
+  return !isLoading() ? (
     <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
       <DragDropSensors />
       <Editor
@@ -166,5 +193,7 @@ export const Workspace: Component = () => {
       />
       <DragOverlay>{(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}</DragOverlay>
     </DragDropProvider>
+  ) : (
+    <WorkspaceLoading />
   );
 };
