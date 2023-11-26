@@ -10,6 +10,9 @@
 
   @include tablet {
     padding-top: 0.25rem;
+    width: 20%;
+    margin: 0 auto;
+    z-index: 11;
   }
 
   .button {

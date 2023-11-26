@@ -15,6 +15,10 @@
     opacity: 0;
   }
 
+  &.is-saving {
+    filter: brightness(0.75);
+  }
+
   .summary {
     display: grid;
     margin: 0 1rem;
@@ -56,6 +60,54 @@
         }
       }
     }
+  }
+
+  .login-prompt {
+    a {
+      @include link;
+    }
+  }
+
+  .checkboxes {
+    display: grid;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+
+    .label {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .text-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    @include tablet {
+      flex-direction: row;
+    }
+  }
+
+  .input {
+    @include text-input;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    @include tablet {
+      flex-direction: row;
+    }
+  }
+
+  .button {
+    @include button;
+  }
+
+  .failure-message {
+    color: #{color("accent-light")};
   }
 
   .content {
@@ -104,14 +156,22 @@
       }
 
       &.settings {
-        max-height: 4rem;
+        max-height: 16rem;
       }
 
       &.synth {
         max-height: 16rem;
 
+        &:has(.small) {
+          max-height: 10rem;
+        }
+
         @include tablet {
           max-height: 13rem;
+
+          &:has(.small) {
+            max-height: 10rem;
+          }
         }
       }
     }
@@ -136,17 +196,6 @@
           max-height: 2.25rem;
         }
       }
-    }
-  }
-
-  .checkboxes {
-    display: grid;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-
-    .label {
-      display: flex;
-      gap: 0.5rem;
     }
   }
 }

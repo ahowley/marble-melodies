@@ -1,4 +1,4 @@
-import { createSignal, type Component, Show, onMount, createEffect } from "solid-js";
+import { createSignal, type Component, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import {
   DragDropProvider,
@@ -8,7 +8,11 @@ import {
 } from "@thisbeyond/solid-dnd";
 import { Editor } from "../../components/editor/Editor";
 import { Toolbar } from "../../components/toolbar/Toolbar";
-import { useUserContext } from "../../components/user_context/UserContext";
+import {
+  SaveTrackBody,
+  ServerResponse,
+  useUserContext,
+} from "../../components/user_context/UserContext";
 import {
   GameSettings,
   GameState,
@@ -22,8 +26,9 @@ import "./Workspace.scss";
 export const Workspace: Component = () => {
   const navigate = useNavigate();
   const {
+    userId: [userId, _setUserId],
     lastVisitedTrackId: [lastVisitedTrackId, setLastVisitedTrackId],
-    server: { getTrack },
+    server: { getTrack, postTrack, putTrack, deleteTrack },
   } = useUserContext();
   const {
     initialState: [_initialState, setInitialState],
@@ -34,8 +39,12 @@ export const Workspace: Component = () => {
     selectedTab: [selectedTab, setSelectedTab],
     marbleSynth: [marbleSynth, _setMarbleSynth],
   } = useGameContext();
+  const [trackName, setTrackName] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(true);
-  const { id } = useParams();
+  const [isSaving, setIsSaving] = createSignal(false);
+  const [userOwnsTrack, setUserOwnsTrack] = createSignal(false);
+  const [failureMessage, setFailureMessage] = createSignal("");
+  const params = useParams();
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
 
@@ -79,6 +88,7 @@ export const Workspace: Component = () => {
       setSynthSettings(savedSynthSettings);
     }
 
+    setUserOwnsTrack(false);
     setIsLoading(false);
   };
 
@@ -102,14 +112,74 @@ export const Workspace: Component = () => {
         volume: data.volume,
       });
     }
+    if (data.name) {
+      setTrackName(data.name);
+    }
     if (data.initialState) {
       setInitialState(data.initialState);
     }
+    if (data.user_id === userId()) {
+      setUserOwnsTrack(true);
+    }
+
+    saveStateToLocalStorage();
     setIsLoading(false);
   };
 
-  const handleSave = (newState: GameState) => {
-    setInitialState(newState);
+  const handleSave = async (event: SubmitEvent) => {
+    event.preventDefault();
+
+    const trackNameField = event.currentTarget as HTMLFormElement;
+    const name = trackNameField.trackname.value as string;
+    const initialState = editor()?.initialState;
+    const previewOnPlayback = editor()?.previewOnPlayback ?? false;
+    const volume = marbleSynth()?.volume || 0.5;
+
+    if (!name) {
+      return setFailureMessage("Please name your track before saving!");
+    }
+
+    const postBody: SaveTrackBody = {
+      name,
+      previewOnPlayback,
+      volume,
+      initialState: initialState as GameState,
+    };
+
+    setIsSaving(true);
+
+    let response: Promise<ServerResponse>;
+    if (params.id) {
+      response = putTrack(params.id, postBody);
+    } else {
+      response = postTrack(postBody);
+    }
+    const { status, data } = await response;
+    if (status === 401) {
+      setIsSaving(false);
+      return setFailureMessage("Sorry, it looks like you're not logged in!");
+    }
+    if (status === 400 || status === 500) {
+      const firstError = data.errors?.length && data.errors[0];
+      if (!firstError || status === 500) {
+        setIsSaving(false);
+        return setFailureMessage("Something went wrong - sorry! Wait a few seconds and try again.");
+      }
+
+      setIsSaving(false);
+      return setFailureMessage(firstError.msg);
+    }
+
+    const { trackId, message } = data;
+    if (!trackId || !message) {
+      setIsSaving(false);
+      return setFailureMessage("Something went wrong - sorry! Wait a few seconds and try again.");
+    }
+
+    setFailureMessage(message as string);
+    navigate(`/track/${trackId}`);
+    setLastVisitedTrackId(`${trackId}`);
+    location.reload();
   };
 
   const closeToolbar = () => {
@@ -192,16 +262,14 @@ export const Workspace: Component = () => {
   };
 
   const lastVisited = lastVisitedTrackId();
-  if (id) {
-    if (id === "new") {
+  if (params.id) {
+    if (params.id === "new") {
       setLastVisitedTrackId(null);
       navigate("/track");
       setIsLoading(false);
-    } else if (lastVisited === id) {
-      loadStateFromLocalStorage();
     } else {
-      setLastVisitedTrackId(id);
-      loadStateFromServer(id);
+      setLastVisitedTrackId(params.id);
+      loadStateFromServer(params.id);
     }
   } else {
     if (lastVisited) {
@@ -225,15 +293,16 @@ export const Workspace: Component = () => {
     >
       <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
         <DragDropSensors />
-        <Editor
-          handleSave={handleSave}
-          saveStateToLocalStorage={saveStateToLocalStorage}
-          closeToolbar={closeToolbar}
-        />
+        <Editor saveStateToLocalStorage={saveStateToLocalStorage} closeToolbar={closeToolbar} />
         <Toolbar
           ref={details!}
           saveStateToLocalStorage={saveStateToLocalStorage}
           toggleToolbarOpen={toggleToolbarOpen}
+          handleSave={handleSave}
+          userOwnsTrack={userOwnsTrack()}
+          failureMessage={failureMessage()}
+          isSaving={isSaving()}
+          trackName={trackName()}
         />
         <DragOverlay>
           {(draggable) => <div class={`${draggable ? draggable.id : ""}`} />}

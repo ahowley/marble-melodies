@@ -1,4 +1,6 @@
 import { Component, Ref } from "solid-js";
+import { A } from "@solidjs/router";
+import { useUserContext } from "../user_context/UserContext";
 import { GameSettings, useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
 import { Shape } from "../draggable/Shape";
@@ -12,8 +14,16 @@ type ToolbarProps = {
   ref: Ref<HTMLDetailsElement>;
   saveStateToLocalStorage: () => void;
   toggleToolbarOpen: (event: MouseEvent) => void;
+  handleSave: (event: SubmitEvent) => void;
+  userOwnsTrack: boolean;
+  failureMessage: string;
+  isSaving: boolean;
+  trackName: string | null;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
+  const {
+    userId: [userId, _setUserId],
+  } = useUserContext();
   const {
     editor: [editor, _setEditor],
     settings: [settings, _setSettings],
@@ -39,7 +49,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   return (
     <details
-      class={`toolbar ${openState() === "open" ? "open" : "closed"} ${!stopped() ? "hidden" : ""}`}
+      class={`toolbar ${openState() === "open" ? "open" : "closed"} ${!stopped() ? "hidden" : ""} ${
+        props.isSaving ? "is-saving" : ""
+      }`}
       open={["open", "closing"].includes(openState())}
       ref={props.ref!}
     >
@@ -115,7 +127,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           </form>
         )}
         {selectedTab() === 2 && (
-          <form class="checkboxes" action="">
+          <form class="checkboxes" action="" onSubmit={props.handleSave}>
             <label class="label">
               <input
                 type="checkbox"
@@ -125,6 +137,29 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               />
               Preview during playback
             </label>
+            {userId() ? (
+              <label class="text-label">
+                Track Name
+                <input type="text" class="input" name="trackname" value={props.trackName || ""} />
+              </label>
+            ) : (
+              <p class="login-prompt">
+                <A href="/login">Log in</A> to name & save your track!
+              </p>
+            )}
+            <div class="buttons">
+              {userId() && (
+                <button type="submit" class="button">
+                  Save
+                </button>
+              )}
+              {props.userOwnsTrack && (
+                <button type="button" class="button">
+                  Delete Track
+                </button>
+              )}
+              {props.failureMessage && <p class="failure-message">{props.failureMessage}</p>}
+            </div>
           </form>
         )}
         <MarbleSynth

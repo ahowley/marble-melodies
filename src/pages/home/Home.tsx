@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { useLocation, useNavigate } from "@solidjs/router";
+import { A, useLocation, useNavigate } from "@solidjs/router";
 import { useUserContext } from "../../components/user_context/UserContext";
 import "./Home.scss";
 
@@ -18,7 +18,9 @@ export const Home: Component = () => {
       <div class="marble" />
       <h2 class="heading">Marble Melodies</h2>
       <p class="description">A tool for making music with nothing but gravity and marbles.</p>
-      <button class="button">Get started</button>
+      <A href="/track">
+        <button class="button">Get started</button>
+      </A>
     </main>
   );
 };

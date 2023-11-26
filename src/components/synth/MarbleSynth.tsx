@@ -93,7 +93,11 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   });
 
   return (
-    <section class={`marble-synth ${!props.showing ? "hidden" : ""}`}>
+    <section
+      class={`marble-synth ${!props.showing ? "hidden" : ""} ${
+        singleBodySelected()?.name() !== "note-block" ? "small" : ""
+      }`}
+    >
       <form class="controls">
         <fieldset class="synth settings">
           <legend class="legend">Global</legend>

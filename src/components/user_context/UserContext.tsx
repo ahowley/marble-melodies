@@ -1,12 +1,14 @@
 import { createContext, useContext, ParentComponent } from "solid-js";
 import { GameState } from "../game_context/GameContext";
 
-type ServerResponse = {
+export type ServerResponse = {
   status: number;
   data: {
     id?: number;
     token?: string;
+    trackId?: number;
     user_id?: number;
+    name?: string;
     initialState?: GameState;
     previewOnPlayback?: boolean;
     volume?: number;
@@ -20,6 +22,13 @@ type LoginBody = {
   password: string;
 };
 
+export type SaveTrackBody = {
+  name: string;
+  previewOnPlayback: boolean;
+  volume: number;
+  initialState: GameState;
+};
+
 type AuthContext = {
   lastVisitedTrackId: [() => string | null, (id: string | null) => void];
   userId: [() => number | null, (id: number) => void];
@@ -29,6 +38,9 @@ type AuthContext = {
     register: (postBody: LoginBody) => Promise<ServerResponse>;
     login: (postBody: LoginBody) => Promise<ServerResponse>;
     getTrack: (id: string) => Promise<ServerResponse>;
+    postTrack: (postBody: SaveTrackBody) => Promise<ServerResponse>;
+    putTrack: (id: string, postBody: SaveTrackBody) => Promise<ServerResponse>;
+    deleteTrack: (id: string) => Promise<ServerResponse>;
   };
 };
 
@@ -37,6 +49,7 @@ const serverRequest = async (
   method: "GET" | "POST" | "PUT" | "DELETE",
   endpoint: string,
   body?: object,
+  auth = false,
 ): Promise<ServerResponse> => {
   const options: RequestInit = {
     method: method,
@@ -47,6 +60,15 @@ const serverRequest = async (
   };
   if (body) {
     options.body = JSON.stringify(body);
+  }
+  if (auth) {
+    if (!options.headers) throw new TypeError("Something went wrong with the request headers.");
+    const authHeader = localStorage.getItem("token");
+    if (!authHeader) throw new TypeError("User is not logged in.");
+    options.headers = {
+      ...options.headers,
+      authorization: authHeader,
+    };
   }
 
   const response = await fetch(`${backendUrl}${endpoint}`, options);
@@ -84,6 +106,12 @@ const authContext: AuthContext = {
       await serverRequest("POST", "/user/register", postBody),
     login: async (postBody: LoginBody) => await serverRequest("POST", "/user/login", postBody),
     getTrack: async (id: string) => await serverRequest("GET", `/track/${id}`),
+    postTrack: async (postBody: SaveTrackBody) =>
+      await serverRequest("POST", "/track", postBody, true),
+    putTrack: async (id: string, putBody: SaveTrackBody) =>
+      await serverRequest("PUT", `/track/${id}`, putBody, true),
+    deleteTrack: async (id: string) =>
+      await serverRequest("DELETE", `/track/${id}`, undefined, true),
   },
 };
 

@@ -8,7 +8,7 @@
   background-color: #{color("primary")};
   color: #{color("background")};
   @include tablet {
-    width: 80vw;
+    width: 50vw;
   }
 
   &.hidden {
@@ -35,6 +35,12 @@
 
   .slider {
     width: 100%;
+  }
+
+  .dropdown {
+    outline: 2px solid #{color("accent-secondary-light")};
+    padding: 0.25rem;
+    border-radius: 5px;
   }
 
   .settings {

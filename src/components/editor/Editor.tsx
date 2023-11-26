@@ -1,13 +1,12 @@
 import { type Component, onMount, onCleanup } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
-import { GameState, useGameContext } from "../game_context/GameContext";
+import { useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
 import { WorkspaceEditor, Body } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
 import "./Editor.scss";
 
 type EditorProps = {
-  handleSave: (newState: GameState) => void;
   saveStateToLocalStorage: () => void;
   closeToolbar: () => void;
 };
