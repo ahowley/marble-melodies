@@ -181,13 +181,13 @@ const renderPreview = async () => {
 };
 
 setInterval(async () => {
-  if (performance.now() - lastPreviewTime > 60 && !previewing && !noPreview && previewQueued) {
+  if (performance.now() - lastPreviewTime > 20 && !previewing && !noPreview && previewQueued) {
     previewing = true;
     previewQueued = false;
     await renderPreview();
     previewing = false;
   }
-}, 60);
+}, 20);
 
 const update = (lastFramePassed = false) => {
   if (lastFramePassed) {
