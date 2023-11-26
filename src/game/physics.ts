@@ -130,9 +130,17 @@ const getNextFrame = (preview = false): Frame => {
   Engine.update(engine, DELTA);
   frameId += 1;
 
+  const serializedBodies: SerializedBody[] = [];
+  for (let i = 0; i < world.bodies.length; i++) {
+    const body = world.bodies[i];
+    if (!(body.label === "marble") && !(body.label === "note-block")) continue;
+    if (body.label === "note-block" && !bodiesWithNotes.includes(body)) continue;
+    serializedBodies.push(getSerializedBody(body));
+  }
+
   const frame: Frame = {
     id: frameId,
-    bodies: world.bodies.map((body) => getSerializedBody(body)),
+    bodies: serializedBodies,
     timeSpentRendering: 0,
     calcDuration: performance.now() - startTime,
     lastFrame: preview || !hasMovingBodies,
@@ -173,12 +181,7 @@ const renderPreview = async () => {
 };
 
 setInterval(async () => {
-  if (
-    performance.now() - lastPreviewTime > 60 * (Math.log(world.bodies.length) + 1) &&
-    !previewing &&
-    !noPreview &&
-    previewQueued
-  ) {
+  if (performance.now() - lastPreviewTime > 60 && !previewing && !noPreview && previewQueued) {
     previewing = true;
     previewQueued = false;
     await renderPreview();
