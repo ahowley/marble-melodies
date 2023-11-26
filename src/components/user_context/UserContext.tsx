@@ -9,7 +9,14 @@ type ServerResponse = {
     initialState?: GameState;
     previewOnPlayback?: boolean;
     volume?: number;
+    message?: string;
+    errors?: { location: string; msg: string; path: string; type: string; value: string }[];
   };
+};
+
+type LoginBody = {
+  username: string;
+  password: string;
 };
 
 type AuthContext = {
@@ -18,6 +25,7 @@ type AuthContext = {
   jwt: [() => string | null, (id: string) => void];
   logout: () => void;
   server: {
+    register: (postBody: LoginBody) => Promise<ServerResponse>;
     getTrack: (id: string) => Promise<ServerResponse>;
   };
 };
@@ -66,6 +74,8 @@ const authContext: AuthContext = {
     localStorage.removeItem("jwt");
   },
   server: {
+    register: async (postBody: LoginBody) =>
+      await serverRequest("POST", "/user/register", postBody),
     getTrack: async (id: string) => await serverRequest("GET", `/track/${id}`),
   },
 };

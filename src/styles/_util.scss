@@ -92,7 +92,7 @@ $colors: (
   width: 100%;
   @include desktop {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 65%;
+    grid-template-columns: minmax(0, 1fr) 60%;
     justify-items: flex-end;
     align-items: center;
     gap: 0.5rem;
@@ -105,6 +105,10 @@ $colors: (
   border-radius: 5px;
   padding: 0 0.5rem;
   color: #{color("background")};
+
+  &.invalid {
+    outline: 3px solid #{color("accent-dark")};
+  }
 }
 
 @mixin login-form {
@@ -113,9 +117,18 @@ $colors: (
   justify-content: center;
   width: 100%;
   height: 100svh;
-  overflow: hidden;
+  padding-top: 5rem;
+
+  &.submitting {
+    filter: brightness(0.75);
+
+    .marble {
+      animation-duration: 0.5s;
+    }
+  }
 
   .marble {
+    z-index: 0;
     margin: 0 auto;
     animation: marble-bouncing;
     animation-duration: 1s;
@@ -126,6 +139,10 @@ $colors: (
     @include heading;
     text-align: center;
     line-height: 1;
+  }
+
+  .description {
+    @include body;
   }
 
   .fields {
@@ -141,6 +158,13 @@ $colors: (
 
   .label {
     @include form-label;
+    border-radius: 5px;
+    background-color: #{color("secondary")};
+    padding: 1rem;
+
+    @include desktop {
+      padding: 0.5rem 1rem;
+    }
   }
 
   .input {
