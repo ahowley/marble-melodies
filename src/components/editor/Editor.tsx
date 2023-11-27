@@ -116,7 +116,7 @@ export const Editor: Component<EditorProps> = (props) => {
     if (event.key === "Backspace" || event.key === "Delete") {
       handleDelete();
     }
-    if (event.key === " " || event.key === "Enter") {
+    if ((event.key === " " || event.key === "Enter") && openState() !== "open") {
       togglePlay();
     }
     if (event.key === "Escape") {

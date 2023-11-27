@@ -115,7 +115,6 @@ export const Workspace: Component = () => {
 
     const workspace = editor();
     if (data.previewOnPlayback) {
-      console.log(workspace, "hi");
       setSettings({
         ...settings,
         previewOnPlayback: data.previewOnPlayback,
