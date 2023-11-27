@@ -1,5 +1,6 @@
 import { createContext, useContext, ParentComponent } from "solid-js";
 import { GameState } from "../game_context/GameContext";
+import { Track } from "../track_grid/TrackGrid";
 
 export type ServerResponse = {
   status: number;
@@ -15,6 +16,7 @@ export type ServerResponse = {
     message?: string;
     errors?: { location: string; msg: string; path: string; type: string; value: string }[];
   };
+  tracks?: Track[];
 };
 
 type LoginBody = {
@@ -38,6 +40,8 @@ type AuthContext = {
     register: (postBody: LoginBody) => Promise<ServerResponse>;
     login: (postBody: LoginBody) => Promise<ServerResponse>;
     getTrack: (id: string) => Promise<ServerResponse>;
+    getHomeTracks: () => Promise<ServerResponse>;
+    getUserTracks: () => Promise<ServerResponse>;
     postTrack: (postBody: SaveTrackBody) => Promise<ServerResponse>;
     putTrack: (id: string, postBody: SaveTrackBody) => Promise<ServerResponse>;
     deleteTrack: (id: string) => Promise<ServerResponse>;
@@ -50,6 +54,7 @@ const serverRequest = async (
   endpoint: string,
   body?: object,
   auth = false,
+  dataIsTracks = false,
 ): Promise<ServerResponse> => {
   const options: RequestInit = {
     method: method,
@@ -73,6 +78,12 @@ const serverRequest = async (
 
   const response = await fetch(`${backendUrl}${endpoint}`, options);
   const { status } = response;
+
+  if (dataIsTracks) {
+    const tracks = await response.json();
+    return { status, data: {}, tracks };
+  }
+
   if (status !== 204) {
     const data = await response.json();
     return { status, data };
@@ -110,6 +121,8 @@ const authContext: AuthContext = {
       await serverRequest("POST", "/user/register", postBody),
     login: async (postBody: LoginBody) => await serverRequest("POST", "/user/login", postBody),
     getTrack: async (id: string) => await serverRequest("GET", `/track/${id}`),
+    getHomeTracks: async () => await serverRequest("GET", "/track", undefined, false, true),
+    getUserTracks: async () => await serverRequest("GET", "/user/track", undefined, true, true),
     postTrack: async (postBody: SaveTrackBody) =>
       await serverRequest("POST", "/track", postBody, true),
     putTrack: async (id: string, putBody: SaveTrackBody) =>

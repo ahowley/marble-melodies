@@ -1,0 +1,37 @@
+@use "../../styles/util" as *;
+
+.track-grid-loading {
+  @include text-page;
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+
+  @include desktop {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .subheading {
+    @include subheading;
+  }
+
+  .byline {
+    font-size: 0.875rem;
+    color: #{color("primary-dark")};
+  }
+
+  .grid-item {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: #{color("secondary")};
+    border-radius: 5px;
+
+    &:hover {
+      background-color: #{color("secondary-light")};
+    }
+  }
+}

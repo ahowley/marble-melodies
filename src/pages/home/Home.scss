@@ -7,9 +7,21 @@
   max-width: 30rem;
   padding: 1rem;
 
+  .marble {
+    z-index: 0;
+    margin-bottom: -2rem;
+  }
+
   .heading {
     @include heading;
     align-self: flex-start;
+  }
+
+  & > .subheading {
+    @include subheading;
+    align-self: flex-start;
+    margin-top: 3rem;
+    margin-bottom: -1rem;
   }
 
   .description {
