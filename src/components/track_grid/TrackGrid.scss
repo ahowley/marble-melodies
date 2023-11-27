@@ -4,6 +4,18 @@
   @include text-page;
 }
 
+.track-grid-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 4rem;
+
+  & > .fallback-button {
+    @include button;
+    align-self: flex-start;
+  }
+}
+
 .track-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

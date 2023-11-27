@@ -1,4 +1,4 @@
-import { createResource, type Component, Suspense, For } from "solid-js";
+import { createResource, type Component, Suspense, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { useUserContext } from "../user_context/UserContext";
 import "./TrackGrid.scss";
@@ -38,26 +38,38 @@ export const TrackGrid: Component<TrackGridProps> = (props) => {
   });
 
   return (
-    <ul class="track-grid">
-      <For each={tracks()}>
-        {(track) => (
-          <li>
-            <A inactiveClass="grid-item" href={`/track/{track.id}`}>
-              <p class="subheading">
-                {track.id}. {track.name}
-              </p>
-              <p class="byline">by {track.username}</p>
-            </A>
-          </li>
-        )}
-      </For>
-    </ul>
+    <Show
+      when={tracks()?.length}
+      fallback={
+        <div class="track-grid-fallback">
+          You haven't made any tracks yet!
+          <button type="button" class="fallback-button">
+            <A href="/track/new">Get started</A>
+          </button>
+        </div>
+      }
+    >
+      <ul class="track-grid">
+        <For each={tracks()}>
+          {(track) => (
+            <li>
+              <A inactiveClass="grid-item" href={`/track/${track.id}`}>
+                <p class="subheading">
+                  {track.id}. {track.name}
+                </p>
+                <p class="byline">by {track.username}</p>
+              </A>
+            </li>
+          )}
+        </For>
+      </ul>
+    </Show>
   );
 };
 
 export const TrackGridLoading: Component = () => (
-  <main class="track-grid-loading">
+  <div class="track-grid-loading">
     <div class="marble" />
     Loading tracks...
-  </main>
+  </div>
 );
