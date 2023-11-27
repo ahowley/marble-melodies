@@ -4,10 +4,12 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "vite",
+    "start": "npx http-server ./dist",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "license": "MIT",
   "devDependencies": {
