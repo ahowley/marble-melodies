@@ -31,7 +31,7 @@ export const Workspace: Component = () => {
     server: { getTrack, postTrack, putTrack, deleteTrack },
   } = useUserContext();
   const {
-    initialState: [_initialState, setInitialState],
+    initialState: [initialState, setInitialState],
     settings: [settings, setSettings],
     synthSettings: [synthSettings, setSynthSettings],
     editor: [editor, _setEditor],
@@ -49,27 +49,33 @@ export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
 
-  const saveStateToLocalStorage = () => {
-    const initialState = editor()?.initialState;
-    if (initialState?.length) {
+  const saveStateToLocalStorage = (fromSettings = false) => {
+    if (!fromSettings) {
+      const initialState = editor()?.initialState;
+      if (initialState?.length) {
+        localStorage.setItem("lastTrackState", JSON.stringify(initialState));
+        setInitialState(initialState);
+      } else if (initialState?.length === 0) {
+        localStorage.removeItem("lastTrackState");
+        setInitialState([]);
+      }
+
+      const settings: GameSettings = {
+        previewOnPlayback: editor()?.previewOnPlayback ?? false,
+      };
+      localStorage.setItem("gameSettings", JSON.stringify(settings));
+      setSettings(settings);
+
+      const synthSettings: SynthSettings = {
+        volume: marbleSynth()?.volume || 0.5,
+      };
+      localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
+      setSynthSettings(synthSettings);
+    } else {
       localStorage.setItem("lastTrackState", JSON.stringify(initialState));
-      setInitialState(initialState);
-    } else if (initialState?.length === 0) {
-      localStorage.removeItem("lastTrackState");
-      setInitialState([]);
+      localStorage.setItem("gameSettings", JSON.stringify(settings));
+      localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
     }
-
-    const settings: GameSettings = {
-      previewOnPlayback: editor()?.previewOnPlayback ?? false,
-    };
-    localStorage.setItem("gameSettings", JSON.stringify(settings));
-    setSettings(settings);
-
-    const synthSettings: SynthSettings = {
-      volume: marbleSynth()?.volume || 0.5,
-    };
-    localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
-    setSynthSettings(synthSettings);
   };
 
   const loadStateFromLocalStorage = async () => {
@@ -140,7 +146,7 @@ export const Workspace: Component = () => {
       setUserOwnsTrack(true);
     }
 
-    saveStateToLocalStorage();
+    saveStateToLocalStorage(true);
     setIsLoading(false);
   };
 
