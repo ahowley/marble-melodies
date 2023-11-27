@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "vite --host",
+    "start": "npx http-server ./dist",
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
