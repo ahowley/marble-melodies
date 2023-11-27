@@ -1,5 +1,5 @@
 import { Component, Ref } from "solid-js";
-import { A } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 import { useUserContext } from "../user_context/UserContext";
 import { GameSettings, useGameContext } from "../game_context/GameContext";
 import { DraggableBody } from "../draggable/DraggableBody";
@@ -23,6 +23,7 @@ type ToolbarProps = {
   trackName: string | null;
 };
 export const Toolbar: Component<ToolbarProps> = (props) => {
+  const navigate = useNavigate();
   const {
     userId: [userId, _setUserId],
   } = useUserContext();
@@ -161,6 +162,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   Delete Track
                 </button>
               )}
+              <button
+                type="button"
+                class="button"
+                onClick={() => {
+                  navigate("/track/new");
+                  window.location.replace("/track/new");
+                }}
+              >
+                New
+              </button>
               {props.failureMessage && (
                 <p class={`failure-message ${props.saveWasSuccessful ? "success-message" : ""}`}>
                   {props.failureMessage}

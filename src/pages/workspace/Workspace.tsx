@@ -193,6 +193,7 @@ export const Workspace: Component = () => {
     setIsSaving(false);
     setSaveWasSuccessful(true);
     setLastVisitedTrackId(`${trackId}`);
+    navigate(`/track/${trackId}`, { replace: true });
     window.location.replace(`/track/${trackId}`);
   };
 
@@ -224,6 +225,7 @@ export const Workspace: Component = () => {
     setFailureMessage("The track was successfully deleted!");
     clearLocalStorage();
     setLastVisitedTrackId(null);
+    navigate("/track/new", { replace: true });
     window.location.replace("/track/new");
   };
 
