@@ -1,4 +1,5 @@
 import Konva from "konva";
+import PhysicsWorker from "./physics.ts?worker";
 import { KonvaEventObject } from "konva/lib/Node";
 import { CircleConfig } from "konva/lib/shapes/Circle";
 import { RectConfig } from "konva/lib/shapes/Rect";
@@ -421,7 +422,7 @@ export class WorkspaceEditor {
   ) {
     Konva.dragButtons = [0];
     this.container = container;
-    this.physics = new Worker("/src/game/physics.ts", { type: "module" });
+    this.physics = new PhysicsWorker();
     this.physicsBusy = false;
     this.bodies = [];
     this.bodiesMap = new Map();
