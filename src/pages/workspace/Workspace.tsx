@@ -113,23 +113,29 @@ export const Workspace: Component = () => {
       return loadStateFromLocalStorage();
     }
 
+    const workspace = editor();
     if (data.previewOnPlayback) {
+      console.log(workspace, "hi");
       setSettings({
         ...settings,
         previewOnPlayback: data.previewOnPlayback,
       });
+      if (workspace) workspace.previewOnPlayback = data.previewOnPlayback;
     }
     if (data.volume !== undefined) {
       setSynthSettings({
         ...synthSettings,
         volume: data.volume,
       });
+      const synth = marbleSynth();
+      if (synth) synth.volume = data.volume;
     }
     if (data.name) {
       setTrackName(data.name);
     }
     if (data.initialState) {
       setInitialState(data.initialState);
+      if (workspace) workspace.initialize(data.initialState);
     }
     if (data.user_id === userId()) {
       setUserOwnsTrack(true);
