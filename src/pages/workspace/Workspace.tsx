@@ -302,6 +302,7 @@ export const Workspace: Component = () => {
       }
 
       if (!workspaceEditor.playing && !workspaceEditor.disableTransformer) {
+        workspaceEditor.transformer.nodes([]);
         workspaceEditor.initialize([...workspaceEditor.initialState, newSerializedBody]);
         saveStateToLocalStorage();
       }
