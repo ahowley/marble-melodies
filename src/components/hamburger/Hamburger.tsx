@@ -31,6 +31,7 @@ export const Hamburger: Component = () => {
         <span class="bun" />
         <span class="bun" />
         <span class="bun" />
+        <span class="hidden-label">Menu</span>
       </button>
       <ul class="nav-items">
         {isLoggedIn() ? (

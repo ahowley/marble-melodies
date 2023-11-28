@@ -28,6 +28,13 @@
       background: #{color("primary")};
       border-radius: 5px;
     }
+
+    .hidden-label {
+      position: absolute;
+      height: 1px;
+      width: 1px;
+      overflow: hidden;
+    }
   }
 
   .link {
