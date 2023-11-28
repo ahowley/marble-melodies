@@ -539,7 +539,7 @@ export class WorkspaceEditor {
     if (
       !this.bodies.includes(event.target as Body) ||
       this.transformer.nodes().includes(event.target) ||
-      event.evt.button !== 0 ||
+      ![0, undefined].includes(event.evt.button) ||
       event.target === this.stage
     ) {
       return;
@@ -589,7 +589,7 @@ export class WorkspaceEditor {
       this.selectionEnd(event);
     });
 
-    this.stage.on("click tap", (event) => {
+    this.stage.on("click touchend", (event) => {
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (this.selection.visible()) {
         this.transformer.nodes([]);

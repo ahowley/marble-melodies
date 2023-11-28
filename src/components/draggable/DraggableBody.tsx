@@ -11,6 +11,7 @@ export const DraggableBody: ParentComponent<DraggableProps> = (props) => {
   return (
     <div
       class="draggable"
+      classList={{ "is-dragging": draggable.isActiveDraggable }}
       style={transformStyle(draggable.transform)}
       ref={draggable.ref}
       {...draggable.dragActivators}

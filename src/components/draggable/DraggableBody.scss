@@ -4,4 +4,8 @@
   position: relative;
   z-index: 5;
   cursor: pointer;
+
+  &.is-dragging {
+    opacity: 0.3;
+  }
 }
