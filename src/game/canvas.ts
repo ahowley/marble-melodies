@@ -401,6 +401,9 @@ export class WorkspaceEditor {
     y1: number;
     y2: number;
   };
+  lastPinchCenter: null | { x: number; y: number };
+  lastPinchDistance: number;
+  dragStopped: boolean;
   bodies: Body[];
   bodiesMap: Map<string, Body>;
   draggingBodies: Body[];
@@ -421,6 +424,7 @@ export class WorkspaceEditor {
     initialState: Omit<SerializedBody, "canvasId">[] = [],
   ) {
     Konva.dragButtons = [0];
+    Konva.hitOnDragEnabled = true;
     this.container = container;
     this.physics = new PhysicsWorker();
     this.physicsBusy = false;
@@ -466,6 +470,9 @@ export class WorkspaceEditor {
       cornerRadius: 5,
       visible: false,
     });
+    this.lastPinchCenter = null;
+    this.lastPinchDistance = 0;
+    this.dragStopped = false;
     this.previewLines = new Map();
     this.selectionVertices = {
       x1: 0,
@@ -562,6 +569,11 @@ export class WorkspaceEditor {
     }
   }
 
+  scale(scale: { x: number; y: number }, position: { x: number; y: number }) {
+    this.stage.scale(scale);
+    this.stage.position(position);
+  }
+
   listenForPointerEvents() {
     this.stage.on("mousedown", (event) => {
       if (this.playing || this.disableTransformer) {
@@ -590,6 +602,9 @@ export class WorkspaceEditor {
     });
 
     this.stage.on("click touchend", (event) => {
+      this.lastPinchCenter = null;
+      this.lastPinchDistance = 0;
+
       if (this.playing || this.disableTransformer) return this.transformer.nodes([]);
       if (this.selection.visible()) {
         this.transformer.nodes([]);
@@ -623,13 +638,68 @@ export class WorkspaceEditor {
 
       const direction = event.evt.deltaY > 0 ? -1 : 1;
       const newScale = direction > 0 ? oldScale * SCALE_BY : oldScale / SCALE_BY;
-      this.stage.scale({ x: newScale, y: newScale });
-
       const newPos = {
         x: pointer.x - mousePointTo.x * newScale,
         y: pointer.y - mousePointTo.y * newScale,
       };
-      this.stage.position(newPos);
+
+      this.scale({ x: newScale, y: newScale }, newPos);
+    });
+
+    this.stage.on("touchmove", (event) => {
+      const touch1 = event.evt.touches[0];
+      const touch2 = event.evt.touches[1];
+
+      if (touch1 && !touch2 && !this.stage.isDragging() && this.dragStopped) {
+        this.stage.startDrag();
+        this.dragStopped = false;
+      }
+
+      if (touch1 && touch2) {
+        if (this.stage.isDragging()) {
+          this.dragStopped = true;
+          this.stage.stopDrag();
+        }
+
+        const p1 = {
+          x: touch1.clientX,
+          y: touch1.clientY,
+        };
+        const p2 = {
+          x: touch2.clientX,
+          y: touch2.clientY,
+        };
+
+        if (!this.lastPinchCenter) {
+          this.lastPinchCenter = {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2,
+          };
+          return;
+        }
+
+        const distance = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        if (!this.lastPinchDistance) {
+          this.lastPinchDistance = distance;
+        }
+        const newCenter = {
+          x: (p1.x + p2.x) / 2,
+          y: (p1.y + p2.y) / 2,
+        };
+        const pointTo = {
+          x: (newCenter.x - this.stage.x()) / this.stage.scaleX(),
+          y: (newCenter.y - this.stage.y()) / this.stage.scaleX(),
+        };
+        const scale = this.stage.scaleX() * (distance / this.lastPinchDistance);
+        const dx = newCenter.x - this.lastPinchCenter.x;
+        const dy = newCenter.y - this.lastPinchCenter.y;
+        const newPosition = {
+          x: newCenter.x - pointTo.x * scale + dx,
+          y: newCenter.y - pointTo.y * scale + dy,
+        };
+
+        this.scale({ x: scale, y: scale }, newPosition);
+      }
     });
 
     this.transformer.on("transformend", () => {
@@ -732,6 +802,9 @@ export class WorkspaceEditor {
     }
     this.bodiesMap.clear();
     this.bodyTrackedByCamera = null;
+    this.lastPinchCenter = null;
+    this.lastPinchDistance = 0;
+    this.dragStopped = false;
   }
 
   destroy() {
