@@ -38,11 +38,11 @@
     background-color: #{color("secondary-dark")};
     border-radius: 5px;
     border: 1px solid #{color("primary")};
-    box-shadow: 0 20px 80px 10px #{color("background-dark")};
     line-height: 1.4;
 
     &[open] {
       inset: 8rem 1rem auto;
+      box-shadow: 0 20px 80px 10px #{color("background-dark")};
       @include tablet {
         inset: 7rem 3rem auto;
         max-width: 40rem;
