@@ -594,7 +594,10 @@ export class WorkspaceEditor {
       if (this.selection.visible()) {
         this.transformer.nodes([]);
       }
-      if (event.target === this.stage || event.target.parent !== this.interactLayer) {
+      if (
+        event.target === this.stage ||
+        (event.target.parent !== this.interactLayer && event.target.parent !== this.transformer)
+      ) {
         return this.transformer.nodes([]);
       }
 
