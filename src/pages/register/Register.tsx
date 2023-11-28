@@ -65,7 +65,7 @@ export const Register: Component = () => {
           />
         </label>
         <p class="password-byline">
-          Your password should be 10 characters and contain at least 1 of each of the following:
+          Your password should be 10+ characters and contain at least 1 of each of the following:
         </p>
         <ul class="list">
           <li class="password-rule">lowercase and uppercase letter</li>
