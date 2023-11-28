@@ -53,6 +53,7 @@ export const Editor: Component<EditorProps> = (props) => {
       .map((node) => node.id());
     if (bodiesToDelete?.length) {
       editor()?.transformer.nodes([]);
+      setSingleBodySelected(null);
       const newState = (editor()?.initialState as SerializedBody[])?.filter(
         (body) => !bodiesToDelete.includes(body.canvasId),
       );
