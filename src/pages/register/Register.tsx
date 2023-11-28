@@ -50,7 +50,6 @@ export const Register: Component = () => {
 
   return (
     <form class={`registration ${submitting() ? "submitting" : ""}`} onSubmit={handleSubmit}>
-      <div class="marble" />
       <div class="fields">
         <h2 class="heading">Create an Account</h2>
         <p class="description">
@@ -65,6 +64,14 @@ export const Register: Component = () => {
             name="username"
           />
         </label>
+        <p class="password-byline">
+          Your password should be 10 characters and contain at least 1 of each of the following:
+        </p>
+        <ul class="list">
+          <li class="password-rule">lowercase and uppercase letter</li>
+          <li class="password-rule">number</li>
+          <li class="password-rule">special character</li>
+        </ul>
         <label class="label">
           Password
           <input

@@ -2,4 +2,13 @@
 
 .registration {
   @include login-form;
+
+  .password-byline {
+    margin-bottom: -1.5rem;
+  }
+
+  .list {
+    list-style-type: disc;
+    padding-left: 2rem;
+  }
 }
