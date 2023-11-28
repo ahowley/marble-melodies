@@ -75,6 +75,7 @@ export const Editor: Component<EditorProps> = (props) => {
     if (
       !(element instanceof HTMLCanvasElement) &&
       !(element instanceof HTMLButtonElement) &&
+      !(element instanceof HTMLImageElement) &&
       !interactableElements.includes(element)
     ) {
       editor()?.transformer.nodes([]);
@@ -159,6 +160,7 @@ export const Editor: Component<EditorProps> = (props) => {
         stopped={stopped()}
         togglePlay={togglePlay}
         handleStop={handleStop}
+        handleDelete={handleDelete}
       />
       <div
         class="konva-container"

@@ -20,9 +20,22 @@
     z-index: 1;
     display: grid;
     font-size: 0;
+    @include tablet {
+      &.trash {
+        display: none;
+      }
+    }
 
     &.hidden {
       display: none;
+    }
+  }
+
+  .delete-icon {
+    width: 2rem;
+    height: 2rem;
+
+    @include tablet {
     }
   }
 }

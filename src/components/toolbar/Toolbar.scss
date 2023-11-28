@@ -63,6 +63,10 @@
     }
   }
 
+  .delete-body-button {
+    @include button;
+  }
+
   .login-prompt {
     a {
       @include link;
@@ -161,7 +165,7 @@
       }
 
       &.edit {
-        max-height: 4rem;
+        max-height: 6rem;
       }
 
       &.settings {
