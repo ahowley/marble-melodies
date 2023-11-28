@@ -24,6 +24,7 @@ export const Editor: Component<EditorProps> = (props) => {
   const droppable = createDroppable(0);
   let container: HTMLDivElement;
   let interactableElements: Element[] = [];
+  let help: HTMLDetailsElement;
 
   const togglePlay = () => {
     if (playing()) {
@@ -72,11 +73,15 @@ export const Editor: Component<EditorProps> = (props) => {
     toolbar && interactableElements.push(...(toolbar.querySelectorAll("*") || []));
 
     if (
-      !(event.target instanceof HTMLCanvasElement) &&
-      !(event.target instanceof HTMLButtonElement) &&
+      !(element instanceof HTMLCanvasElement) &&
+      !(element instanceof HTMLButtonElement) &&
       !interactableElements.includes(element)
     ) {
       editor()?.transformer.nodes([]);
+    }
+
+    if (help.open && !element.classList.contains("question-mark")) {
+      help.open = false;
     }
   };
 
@@ -160,6 +165,34 @@ export const Editor: Component<EditorProps> = (props) => {
         ref={container!}
         onContextMenu={(event) => event.preventDefault()}
       />
+      <details ref={help!} class="help">
+        <summary class="question-mark">?</summary>
+        <h2 class="heading">Editor How-To</h2>
+        <ul class="instructions">
+          <li class="list-item">
+            Drag + drop <strong>marbles</strong>, <strong>track blocks</strong>, and{" "}
+            <strong>note blocks</strong> into the workspace to add them to your track.
+          </li>
+          <li class="list-item">
+            Click or tap blocks to <strong>resize and rotate</strong> them.
+          </li>
+          <li class="list-item">
+            Click or tap and drag to <strong>move blocks</strong> around, or to{" "}
+            <strong>pan the entire editor</strong>.
+          </li>
+          <li class="list-item">
+            Right click and drag to <strong>box-select</strong>, or shift+click to{" "}
+            <strong>multi-select blocks</strong> (desktop only).
+          </li>
+          <li class="list-item">
+            Press delete or backspace, or the delete button if you're on your phone, to{" "}
+            <strong>delete a block</strong>.
+          </li>
+          <li class="list-item">
+            Double-click to <strong>return to the starting position of the stage</strong>.
+          </li>
+        </ul>
+      </details>
     </main>
   );
 };
