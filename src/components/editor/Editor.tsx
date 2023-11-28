@@ -33,6 +33,7 @@ export const Editor: Component<EditorProps> = (props) => {
       editor()?.play(editor() as WorkspaceEditor);
       setStopped(false);
       props.saveStateToLocalStorage();
+      setTimeout(() => setSingleBodySelected(null));
     }
     setPlaying(!playing());
   };
