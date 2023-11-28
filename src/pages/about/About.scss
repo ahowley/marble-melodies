@@ -1,0 +1,30 @@
+@use "../../styles/util" as *;
+
+.about-page {
+  @include text-page;
+  @include letter;
+  gap: 1rem;
+  align-items: flex-start;
+
+  .marble {
+    margin-bottom: -1rem;
+  }
+
+  .heading {
+    @include heading;
+  }
+
+  .subheading {
+    @include subheading;
+    padding-top: 1rem;
+  }
+
+  .links {
+    list-style-type: disc;
+    padding-left: 2rem;
+  }
+
+  .link {
+    @include link;
+  }
+}

@@ -36,16 +36,22 @@ export const Hamburger: Component = () => {
         {isLoggedIn() ? (
           <>
             <li class="nav-item" onClick={toggleOpen}>
-              <A href="/account">Your Account</A>
+              <A class="link" href="/account">
+                Your Account
+              </A>
             </li>
             <li class="nav-item" onClick={toggleOpen}>
-              <A href="/logout">Log Out</A>
+              <A class="link" href="/logout">
+                Log Out
+              </A>
             </li>
           </>
         ) : (
           <>
             <li class="nav-item" onClick={toggleOpen}>
-              <A href="/login">Log In</A>
+              <A class="link" href="/login">
+                Log In
+              </A>
             </li>
           </>
         )}

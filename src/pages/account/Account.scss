@@ -12,8 +12,11 @@
     @include heading;
   }
 
+  .link {
+    align-self: flex-end;
+  }
+
   .button {
     @include button;
-    align-self: flex-end;
   }
 }

@@ -8,6 +8,8 @@ $colors: (
   "primary": var(--color-primary),
   "primary-dark": var(--color-primary-dark),
   "highlight": var(--color-highlight),
+  "highlight-light": var(--color-highlight-light),
+  "highlight-dark": var(--color-highlight-dark),
   "secondary": var(--color-secondary),
   "secondary-light": var(--color-secondary-light),
   "secondary-dark": var(--color-secondary-dark),
@@ -47,6 +49,11 @@ $colors: (
 }
 
 @mixin heading {
+  width: 100%;
+  border-width: 3px;
+  border-style: solid;
+  border-image: linear-gradient(90deg, #{color("accent")}, transparent);
+  border-image-slice: 0 0 1 0;
   font-size: $heading-size-mobile;
   font-weight: bold;
 

@@ -25,6 +25,9 @@ export const Home: Component = () => {
         </A>
         <h3 class="subheading">Get Rolling</h3>
         <TrackGrid userOnly={false} />
+        <A inactiveClass="about-link" href="/about">
+          About me
+        </A>
       </main>
     </Suspense>
   );
