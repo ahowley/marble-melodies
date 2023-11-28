@@ -10,7 +10,6 @@ type EditorProps = {
   saveStateToLocalStorage: () => void;
   closeToolbar: () => void;
 };
-
 export const Editor: Component<EditorProps> = (props) => {
   const {
     initialState: [initialState, _setInitialState],
@@ -138,6 +137,8 @@ export const Editor: Component<EditorProps> = (props) => {
       removeEventListener("pointermove", pointerMoveListener);
       removeEventListener("pointerup", pointerUpListener);
       document.removeEventListener("keyup", keyUpListener);
+      editor()?.destroy();
+      setEditor(null);
     });
   });
 

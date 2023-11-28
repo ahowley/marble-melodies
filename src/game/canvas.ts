@@ -731,6 +731,12 @@ export class WorkspaceEditor {
     this.bodyTrackedByCamera = null;
   }
 
+  destroy() {
+    this.stop(this);
+    this.cleanup();
+    this.physics.terminate();
+  }
+
   initialize(bodies?: Omit<SerializedBody, "canvasId">[], enablePreview = false) {
     if (bodies) {
       if (this.bodies.length) {
