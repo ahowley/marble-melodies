@@ -699,6 +699,8 @@ export class WorkspaceEditor {
         };
 
         this.scale({ x: scale, y: scale }, newPosition);
+        this.lastPinchDistance = distance;
+        this.lastPinchCenter = newCenter;
       }
     });
 
