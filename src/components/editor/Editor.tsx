@@ -84,8 +84,14 @@ export const Editor: Component<EditorProps> = (props) => {
       editor()?.transformer.nodes([]);
     }
 
-    if (help.open && !element.classList.contains("question-mark")) {
-      help.open = false;
+    if (
+      help.open &&
+      !element.classList.contains("question-mark") &&
+      !element.classList.contains("help")
+    ) {
+      const helpChildren = [...(help?.querySelectorAll("*") || [])];
+
+      if (!helpChildren.includes(element)) help.open = false;
     }
   };
 

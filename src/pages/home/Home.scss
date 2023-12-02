@@ -36,7 +36,10 @@
 
   .about-link {
     @include link;
-    position: fixed;
-    inset: auto auto 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex-grow: 1;
+    padding-top: 3rem;
   }
 }
