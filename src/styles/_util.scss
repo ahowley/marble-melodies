@@ -142,7 +142,7 @@ $colors: (
   min-height: 100svh;
 
   &:has(.marble) {
-    padding-top: calc(5.5rem + $header-height);
+    padding-top: calc(6.5rem + $header-height);
   }
 
   .marble {
@@ -161,7 +161,7 @@ $colors: (
   padding-top: 5rem;
 
   &:has(.marble) {
-    padding-top: calc(5.5rem + $header-height);
+    padding-top: calc(6.5rem + $header-height);
   }
 
   &.submitting {
