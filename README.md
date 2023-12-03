@@ -46,7 +46,7 @@ I haven't had time to implement a tutorial yet, so here's some notes worth menti
 - If you haven't saved, you won't lose progress if you navigate away (for example, to log in or out) - all your edits
   are autosaved in localStorage and will persist until you open or create a new track
 - Double-click to return to the origin of the stage
-- Mousewheel or trackpad pinch to zoom in/out
+- Mousewheel or pinch to zoom in/out
 - Spacebar and Enter to play/pause, esc to stop
 - ctrl+c to copy current selection, ctrl+v to paste
 - Delete or backspace (or the delete button on mobile) to delete your currently selected blocks
