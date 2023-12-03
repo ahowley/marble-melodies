@@ -27,6 +27,7 @@ export const Editor: Component<EditorProps> = (props) => {
   let container: HTMLDivElement;
   let interactableElements: Element[] = [];
   let help: HTMLDetailsElement;
+  let copiedBodies: SerializedBody[] = [];
 
   const togglePlay = () => {
     if (playing()) {
@@ -163,7 +164,18 @@ export const Editor: Component<EditorProps> = (props) => {
         props.handleSave();
       }
       if (event.key === "c") {
-        console.log("copying");
+        const selectedBodies = editor()?.transformer.nodes() as Body[] | undefined;
+        if (selectedBodies?.length) {
+          copiedBodies = selectedBodies.map((body) => {
+            const serialized = body.serialize();
+            serialized.x = serialized.x + 50;
+            serialized.y = serialized.y + 50;
+            if (serialized.cameraTracking) {
+              serialized.cameraTracking = false;
+            }
+            return serialized;
+          });
+        }
       }
       if (event.key === "v") {
         console.log("pasting");
