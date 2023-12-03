@@ -20,7 +20,7 @@ import {
   useGameContext,
 } from "../../components/game_context/GameContext";
 import { SerializedBody, BlockTypes } from "../../game/physics";
-import { COLORS } from "../../game/config";
+import { COLORS, UNDO_CACHE_SIZE } from "../../game/config";
 import "./Workspace.scss";
 
 export const Workspace: Component = () => {
@@ -49,6 +49,8 @@ export const Workspace: Component = () => {
   const [userOwnsTrack, setUserOwnsTrack] = createSignal(false);
   const [failureMessage, setFailureMessage] = createSignal("");
   const [saveWasSuccessful, setSaveWasSuccessful] = createSignal(false);
+  const editHistory: GameState[] = [];
+  let editFuture: GameState[] = [];
   const params = useParams();
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
@@ -355,6 +357,11 @@ export const Workspace: Component = () => {
 
       if (!workspaceEditor.playing && !workspaceEditor.disableTransformer) {
         workspaceEditor.transformer.nodes([]);
+        editFuture = [];
+        editHistory.push([...initialState]);
+        if (editHistory.length > UNDO_CACHE_SIZE) {
+          editHistory.shift();
+        }
         workspaceEditor.initialize([...workspaceEditor.initialState, newSerializedBody]);
         saveStateToLocalStorage();
         triggerUnsavedChanges();
@@ -366,7 +373,7 @@ export const Workspace: Component = () => {
     if (trackId === "new") {
       clearLocalStorage();
       clearSessionStorage();
-      navigate("/track");
+      window.location.replace("/track");
     } else if (
       trackId === lastVisitedTrackId() &&
       localStorage.getItem("lastTrackState") &&
@@ -382,7 +389,7 @@ export const Workspace: Component = () => {
   const loadBlankEditor = () => {
     const lastVisited = lastVisitedTrackId();
     if (lastVisited) {
-      navigate(`/track/${lastVisited}`, { replace: true });
+      window.location.replace(`/track/${lastVisited}`);
     } else {
       loadStateFromLocalStorage();
     }
@@ -413,6 +420,8 @@ export const Workspace: Component = () => {
           handleSave={handleSave}
           triggerUnsavedChanges={triggerUnsavedChanges}
           closeToolbar={closeToolbar}
+          editHistory={editHistory}
+          editFuture={editFuture}
         />
         <Toolbar
           ref={details!}

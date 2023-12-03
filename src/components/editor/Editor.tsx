@@ -1,9 +1,10 @@
 import { type Component, onMount, onCleanup } from "solid-js";
 import { createDroppable } from "@thisbeyond/solid-dnd";
-import { useGameContext } from "../game_context/GameContext";
+import { GameState, useGameContext } from "../game_context/GameContext";
 import { Playback } from "../playback/Playback";
 import { WorkspaceEditor, Body } from "../../game/canvas";
 import { SerializedBody } from "../../game/physics";
+import { UNDO_CACHE_SIZE } from "../../game/config";
 import "./Editor.scss";
 
 type EditorProps = {
@@ -11,6 +12,8 @@ type EditorProps = {
   handleSave: () => void;
   triggerUnsavedChanges: () => void;
   closeToolbar: () => void;
+  editHistory: GameState[];
+  editFuture: GameState[];
 };
 export const Editor: Component<EditorProps> = (props) => {
   const {
@@ -28,6 +31,15 @@ export const Editor: Component<EditorProps> = (props) => {
   let interactableElements: Element[] = [];
   let help: HTMLDetailsElement;
   let copiedBodies: SerializedBody[] = [];
+
+  const triggerUnsavedChanges = () => {
+    props.editFuture = [];
+    props.editHistory.push([...initialState]);
+    if (props.editHistory.length > UNDO_CACHE_SIZE) {
+      props.editHistory.shift();
+    }
+    props.triggerUnsavedChanges();
+  };
 
   const togglePlay = () => {
     if (playing()) {
@@ -66,8 +78,8 @@ export const Editor: Component<EditorProps> = (props) => {
       );
       if (newState) {
         editor()?.initialize(newState);
+        triggerUnsavedChanges();
         props.saveStateToLocalStorage();
-        props.triggerUnsavedChanges();
       }
     }
   };
@@ -130,13 +142,13 @@ export const Editor: Component<EditorProps> = (props) => {
           (draggingBody) => (draggingBody.initialState = draggingBody.serialize()),
         );
         editor()?.initialize();
+        triggerUnsavedChanges();
         props.saveStateToLocalStorage();
-        props.triggerUnsavedChanges();
       }
 
       if (editor()?.transformer.nodes().length) {
+        triggerUnsavedChanges();
         props.saveStateToLocalStorage();
-        props.triggerUnsavedChanges();
       }
     }
   };
@@ -189,15 +201,35 @@ export const Editor: Component<EditorProps> = (props) => {
           const newBodies = workspace.bodies.slice(-copiedBodies.length);
           workspace.transformer.nodes(newBodies);
           copiedBodies = [];
+          triggerUnsavedChanges();
           props.saveStateToLocalStorage();
-          props.triggerUnsavedChanges();
         }
       }
       if (event.key === "z") {
-        console.log("undoing");
+        const workspace = editor();
+        if (!workspace) return;
+        if (!props.editHistory.length) return;
+
+        const currentState = props.editHistory.pop() as GameState;
+        props.editFuture.push([...initialState]);
+
+        workspace.transformer.nodes([]);
+        workspace.initialize(currentState);
+        props.triggerUnsavedChanges();
+        props.saveStateToLocalStorage();
       }
       if (event.key === "y") {
-        console.log("redoing");
+        const workspace = editor();
+        if (!workspace) return;
+        if (!props.editFuture.length) return;
+
+        const currentState = props.editFuture.pop() as GameState;
+        props.editHistory.push([...initialState]);
+
+        workspace.transformer.nodes([]);
+        workspace.initialize(currentState);
+        props.triggerUnsavedChanges();
+        props.saveStateToLocalStorage();
       }
     }
   };
@@ -274,6 +306,32 @@ export const Editor: Component<EditorProps> = (props) => {
           <li class="list-item">
             Select a single note block and check the "Synth" tab for additional note options, like
             pitch and volume per-note.
+          </li>
+          <li class="list-item keyboard-shortcuts">
+            <strong>Keyboard Shortcuts:</strong>
+            <ul class="instructions">
+              <li class="list-item">
+                <strong>ctrl + s</strong> - Save track
+              </li>
+              <li class="list-item">
+                <strong>ctrl + c</strong> - Copy selection
+              </li>
+              <li class="list-item">
+                <strong>ctrl + v</strong> - Paste
+              </li>
+              <li class="list-item">
+                <strong>ctrl + z</strong> - Undo
+              </li>
+              <li class="list-item">
+                <strong>ctrl + y</strong> - Redo
+              </li>
+              <li class="list-item">
+                <strong>Space/Enter</strong> - Play/Pause
+              </li>
+              <li class="list-item">
+                <strong>Esc</strong> - Stop
+              </li>
+            </ul>
           </li>
         </ul>
       </details>
