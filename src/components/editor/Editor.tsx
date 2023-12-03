@@ -35,7 +35,7 @@ export const Editor: Component<EditorProps> = (props) => {
   const triggerUnsavedChanges = () => {
     props.editFuture = [];
     props.editHistory.push([...initialState]);
-    if (props.editHistory.length > UNDO_CACHE_SIZE) {
+    while (props.editHistory.length > UNDO_CACHE_SIZE) {
       props.editHistory.shift();
     }
     props.triggerUnsavedChanges();

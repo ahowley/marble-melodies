@@ -2,7 +2,7 @@ export const FRAME_CACHE_SIZE = 100;
 export const DELTA = 1000 / FRAME_CACHE_SIZE;
 export const CACHES_PER_PREVIEW_POINT = (numberOfMarbles: number) => (numberOfMarbles + 1) / FRAME_CACHE_SIZE;
 export const PREVIEW_FRAME_COUNT = 10000;
-export const UNDO_CACHE_SIZE = 20;
+export const UNDO_CACHE_SIZE = 5;
 
 export const SCALE_BY = 1.03;
 export const SCALE_BY_TOUCH = 1.01;

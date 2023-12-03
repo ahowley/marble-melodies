@@ -359,7 +359,7 @@ export const Workspace: Component = () => {
         workspaceEditor.transformer.nodes([]);
         editFuture = [];
         editHistory.push([...initialState]);
-        if (editHistory.length > UNDO_CACHE_SIZE) {
+        while (editHistory.length > UNDO_CACHE_SIZE) {
           editHistory.shift();
         }
         workspaceEditor.initialize([...workspaceEditor.initialState, newSerializedBody]);
