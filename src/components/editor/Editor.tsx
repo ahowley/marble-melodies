@@ -9,6 +9,7 @@ import "./Editor.scss";
 type EditorProps = {
   saveStateToLocalStorage: () => void;
   handleSave: () => void;
+  triggerUnsavedChanges: () => void;
   closeToolbar: () => void;
 };
 export const Editor: Component<EditorProps> = (props) => {
@@ -65,6 +66,7 @@ export const Editor: Component<EditorProps> = (props) => {
       if (newState) {
         editor()?.initialize(newState);
         props.saveStateToLocalStorage();
+        props.triggerUnsavedChanges();
       }
     }
   };
@@ -128,10 +130,12 @@ export const Editor: Component<EditorProps> = (props) => {
         );
         editor()?.initialize();
         props.saveStateToLocalStorage();
+        props.triggerUnsavedChanges();
       }
 
       if (editor()?.transformer.nodes().length) {
         props.saveStateToLocalStorage();
+        props.triggerUnsavedChanges();
       }
     }
   };

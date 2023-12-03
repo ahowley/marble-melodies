@@ -53,6 +53,11 @@ export const Workspace: Component = () => {
   let transform = { x: 0, y: 0 };
   let details: HTMLDetailsElement;
 
+  const triggerUnsavedChanges = () => {
+    setUnsavedChangesStored(true);
+    setUnsavedChangesSignal(true);
+  };
+
   const saveStateToLocalStorage = (fromSettings = false) => {
     if (!fromSettings) {
       const editorState = editor()?.initialState;
@@ -75,9 +80,6 @@ export const Workspace: Component = () => {
       };
       localStorage.setItem("synthSettings", JSON.stringify(currentSynthSettings));
       setSynthSettings(currentSynthSettings);
-
-      setUnsavedChangesStored(true);
-      setUnsavedChangesSignal(true);
     } else {
       localStorage.setItem("lastTrackState", JSON.stringify(initialState));
       localStorage.setItem("gameSettings", JSON.stringify(settings));
@@ -355,6 +357,7 @@ export const Workspace: Component = () => {
         workspaceEditor.transformer.nodes([]);
         workspaceEditor.initialize([...workspaceEditor.initialState, newSerializedBody]);
         saveStateToLocalStorage();
+        triggerUnsavedChanges();
       }
     }
   };
@@ -408,6 +411,7 @@ export const Workspace: Component = () => {
         <Editor
           saveStateToLocalStorage={saveStateToLocalStorage}
           handleSave={handleSave}
+          triggerUnsavedChanges={triggerUnsavedChanges}
           closeToolbar={closeToolbar}
         />
         <Toolbar
@@ -415,6 +419,7 @@ export const Workspace: Component = () => {
           saveStateToLocalStorage={saveStateToLocalStorage}
           toggleToolbarOpen={toggleToolbarOpen}
           handleSave={handleSave}
+          triggerUnsavedChanges={triggerUnsavedChanges}
           handleDeleteTrack={handleDeleteTrack}
           userOwnsTrack={userOwnsTrack()}
           failureMessage={failureMessage()}

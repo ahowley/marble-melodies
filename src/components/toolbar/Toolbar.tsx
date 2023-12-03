@@ -15,6 +15,7 @@ type ToolbarProps = {
   saveStateToLocalStorage: () => void;
   toggleToolbarOpen: (event: MouseEvent) => void;
   handleSave: (event: SubmitEvent) => void;
+  triggerUnsavedChanges: () => void;
   handleDeleteTrack: () => void;
   userOwnsTrack: boolean;
   failureMessage: string;
@@ -42,6 +43,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const changeSetting = (setting: keyof GameSettings, value: any) => {
     editor()![setting] = value;
     props.saveStateToLocalStorage();
+    props.triggerUnsavedChanges();
   };
 
   const cameraTrackSelectedBody = (track: boolean) => {
@@ -49,6 +51,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       const selectedBody = singleBodySelected() as Marble;
       selectedBody.setTrackCamera(track);
       props.saveStateToLocalStorage();
+      props.triggerUnsavedChanges();
     }
   };
 
@@ -186,6 +189,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         </form>
         <MarbleSynth
           saveStateToLocalStorage={props.saveStateToLocalStorage}
+          triggerUnsavedChanges={props.triggerUnsavedChanges}
           showing={selectedTab() === 3}
         />
       </div>

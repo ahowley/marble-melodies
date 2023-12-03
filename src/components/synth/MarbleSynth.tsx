@@ -8,6 +8,7 @@ import "./MarbleSynth.scss";
 type MarbleSynthProps = {
   showing: boolean;
   saveStateToLocalStorage: () => void;
+  triggerUnsavedChanges: () => void;
 };
 export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
   const {
@@ -39,6 +40,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
       volume: newVolume,
     });
     props.saveStateToLocalStorage();
+    props.triggerUnsavedChanges();
   };
 
   const handleChangeNote = (event: Event) => {
@@ -48,6 +50,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
 
     noteBlock.changeNote(select.value as Notes);
     props.saveStateToLocalStorage();
+    props.triggerUnsavedChanges();
   };
 
   const handleChangeOctave = (event: Event) => {
@@ -57,6 +60,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
 
     noteBlock.changeOctave(select.value as Octaves);
     props.saveStateToLocalStorage();
+    props.triggerUnsavedChanges();
   };
 
   const handleChangeNoteVolume = (event: Event) => {
@@ -66,6 +70,7 @@ export const MarbleSynth: Component<MarbleSynthProps> = (props) => {
 
     noteBlock.changeVolume(parseFloat(range.value));
     props.saveStateToLocalStorage();
+    props.triggerUnsavedChanges();
   };
 
   createEffect(() => {
