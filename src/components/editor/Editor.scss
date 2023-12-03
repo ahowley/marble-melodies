@@ -35,7 +35,6 @@
   .help {
     position: absolute;
     z-index: 10;
-    padding: 1rem;
     background-color: #{color("secondary-dark")};
     border-radius: 5px;
     border: 1px solid #{color("primary")};
@@ -58,16 +57,17 @@
 
   .heading {
     @include subheading;
-    padding-bottom: 0.5rem;
-    @include tablet {
-      padding-bottom: 1rem;
-    }
+    border-width: 3px;
+    border-bottom-style: solid;
+    border-image: linear-gradient(90deg, #{color("accent")}, transparent);
+    border-image-slice: 0 0 1 0;
+    padding: 0.6rem 1rem 0.5rem;
   }
 
   .instructions {
     display: grid;
     list-style-type: disc;
-    padding-left: 1rem;
+    padding: 1rem 1rem 1rem 1.5rem;
     gap: 0.5rem;
     max-height: 50svh;
     overflow: scroll;

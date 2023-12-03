@@ -1,4 +1,11 @@
-import { createContext, useContext, ParentComponent } from "solid-js";
+import {
+  createContext,
+  useContext,
+  ParentComponent,
+  createSignal,
+  Accessor,
+  Setter,
+} from "solid-js";
 import { GameState } from "../game_context/GameContext";
 import { Track } from "../track_grid/TrackGrid";
 
@@ -33,6 +40,10 @@ export type SaveTrackBody = {
 
 type AuthContext = {
   lastVisitedTrackId: [() => string | null, (id: string | null) => void];
+  lastVisitedOwnedByUser: [() => boolean, (isOwnedByUser: boolean) => void];
+  lastVisitedName: [() => string | null, (id: string | null) => void];
+  unsavedChangesSignal: [Accessor<boolean>, Setter<boolean>];
+  unsavedChangesStored: [() => boolean, (hasUnsavedChanges: boolean) => void];
   userId: [() => number | null, (id: number) => void];
   jwt: [() => string | null, (id: string) => void];
   logout: () => void;
@@ -99,6 +110,37 @@ const authContext: AuthContext = {
       id
         ? sessionStorage.setItem("lastVisitedTrackId", id)
         : sessionStorage.removeItem("lastVisitedTrackId"),
+  ],
+  lastVisitedOwnedByUser: [
+    () => {
+      const isOwnedByUser = sessionStorage.getItem("lastVisitedOwnedByUser") === "true";
+      return isOwnedByUser;
+    },
+    (isOwnedByUser: boolean) =>
+      isOwnedByUser
+        ? sessionStorage.setItem("lastVisitedOwnedByUser", "true")
+        : sessionStorage.removeItem("lastVisitedOwnedByUser"),
+  ],
+  lastVisitedName: [
+    () => {
+      const name = sessionStorage.getItem("lastVisitedName") || null;
+      return name;
+    },
+    (name: string | null) =>
+      name
+        ? sessionStorage.setItem("lastVisitedName", name)
+        : sessionStorage.removeItem("lastVisitedName"),
+  ],
+  unsavedChangesSignal: createSignal(false),
+  unsavedChangesStored: [
+    () => {
+      const hasUnsavedChanges = localStorage.getItem("unsavedChanges") === "true";
+      return hasUnsavedChanges;
+    },
+    (hasUnsavedChanges: boolean) =>
+      hasUnsavedChanges
+        ? localStorage.setItem("unsavedChanges", "true")
+        : localStorage.removeItem("unsavedChanges"),
   ],
   userId: [
     () => {

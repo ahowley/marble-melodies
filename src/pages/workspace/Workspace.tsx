@@ -1,4 +1,4 @@
-import { createSignal, type Component, Show } from "solid-js";
+import { createSignal, type Component, Show, createEffect } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import {
   DragDropProvider,
@@ -28,6 +28,10 @@ export const Workspace: Component = () => {
   const {
     userId: [userId, _setUserId],
     lastVisitedTrackId: [lastVisitedTrackId, setLastVisitedTrackId],
+    lastVisitedOwnedByUser: [lastVisitedOwnedByUser, setLastVisitedOwnedByUser],
+    lastVisitedName: [lastVisitedName, setLastVisitedName],
+    unsavedChangesSignal: [_unsavedChangesSignal, setUnsavedChangesSignal],
+    unsavedChangesStored: [unsavedChangesStored, setUnsavedChangesStored],
     server: { getTrack, postTrack, putTrack, deleteTrack },
   } = useUserContext();
   const {
@@ -51,30 +55,35 @@ export const Workspace: Component = () => {
 
   const saveStateToLocalStorage = (fromSettings = false) => {
     if (!fromSettings) {
-      const initialState = editor()?.initialState;
-      if (initialState?.length) {
-        localStorage.setItem("lastTrackState", JSON.stringify(initialState));
-        setInitialState(initialState);
-      } else if (initialState?.length === 0) {
+      const editorState = editor()?.initialState;
+      if (editorState?.length) {
+        localStorage.setItem("lastTrackState", JSON.stringify(editorState));
+        setInitialState(editorState);
+      } else if (editorState?.length === 0) {
         localStorage.removeItem("lastTrackState");
         setInitialState([]);
       }
 
-      const settings: GameSettings = {
+      const currentGameSettings: GameSettings = {
         previewOnPlayback: editor()?.previewOnPlayback ?? false,
       };
-      localStorage.setItem("gameSettings", JSON.stringify(settings));
-      setSettings(settings);
+      localStorage.setItem("gameSettings", JSON.stringify(currentGameSettings));
+      setSettings(currentGameSettings);
 
-      const synthSettings: SynthSettings = {
+      const currentSynthSettings: SynthSettings = {
         volume: marbleSynth()?.volume || 0.5,
       };
-      localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
-      setSynthSettings(synthSettings);
+      localStorage.setItem("synthSettings", JSON.stringify(currentSynthSettings));
+      setSynthSettings(currentSynthSettings);
+
+      setUnsavedChangesStored(true);
+      setUnsavedChangesSignal(true);
     } else {
       localStorage.setItem("lastTrackState", JSON.stringify(initialState));
       localStorage.setItem("gameSettings", JSON.stringify(settings));
       localStorage.setItem("synthSettings", JSON.stringify(synthSettings));
+      setUnsavedChangesStored(false);
+      setUnsavedChangesSignal(false);
     }
   };
 
@@ -101,7 +110,12 @@ export const Workspace: Component = () => {
       setSynthSettings(savedSynthSettings);
     }
 
-    setUserOwnsTrack(false);
+    if (lastVisitedName()) {
+      setTrackName(lastVisitedName());
+    }
+
+    setUnsavedChangesSignal(unsavedChangesStored());
+    setUserOwnsTrack(lastVisitedOwnedByUser());
     setIsLoading(false);
   };
 
@@ -109,6 +123,14 @@ export const Workspace: Component = () => {
     localStorage.removeItem("lastTrackState");
     localStorage.removeItem("gameSettings");
     localStorage.removeItem("synthSettings");
+    setUnsavedChangesStored(false);
+    setUnsavedChangesSignal(false);
+  };
+
+  const clearSessionStorage = () => {
+    setLastVisitedTrackId(null);
+    setLastVisitedOwnedByUser(false);
+    setLastVisitedName(null);
   };
 
   const loadStateFromServer = async (trackId: string) => {
@@ -116,7 +138,7 @@ export const Workspace: Component = () => {
     if (status === 404) {
       setLastVisitedTrackId(null);
       navigate("/404");
-      return loadStateFromLocalStorage();
+      return;
     }
 
     const workspace = editor();
@@ -137,6 +159,7 @@ export const Workspace: Component = () => {
     }
     if (data.name) {
       setTrackName(data.name);
+      setLastVisitedName(data.name);
     }
     if (data.initialState) {
       setInitialState(data.initialState);
@@ -144,8 +167,14 @@ export const Workspace: Component = () => {
     }
     if (data.user_id === userId()) {
       setUserOwnsTrack(true);
+      setLastVisitedOwnedByUser(true);
+    } else {
+      setUserOwnsTrack(false);
+      setLastVisitedOwnedByUser(false);
     }
 
+    setUnsavedChangesSignal(false);
+    setUnsavedChangesStored(false);
     saveStateToLocalStorage(true);
     setIsLoading(false);
   };
@@ -204,11 +233,12 @@ export const Workspace: Component = () => {
     setIsSaving(false);
     setSaveWasSuccessful(true);
     setLastVisitedTrackId(`${trackId}`);
+    setUnsavedChangesSignal(false);
+    setUnsavedChangesStored(false);
     navigate(`/track/${trackId}`, { replace: true });
-    window.location.replace(`/track/${trackId}`);
   };
 
-  const handleDelete = async () => {
+  const handleDeleteTrack = async () => {
     setIsSaving(true);
     const { status } = await deleteTrack(params.id);
     if (!status || status === 500) {
@@ -234,9 +264,6 @@ export const Workspace: Component = () => {
     setIsSaving(false);
     setSaveWasSuccessful(true);
     setFailureMessage("The track was successfully deleted!");
-    clearLocalStorage();
-    setLastVisitedTrackId(null);
-    navigate("/track/new", { replace: true });
     window.location.replace("/track/new");
   };
 
@@ -320,26 +347,39 @@ export const Workspace: Component = () => {
     }
   };
 
-  const lastVisited = lastVisitedTrackId();
-  if (params.id) {
-    if (params.id === "new") {
+  const loadTrack = (trackId: string) => {
+    if (trackId === "new") {
       clearLocalStorage();
-      setLastVisitedTrackId(null);
+      clearSessionStorage();
       navigate("/track");
-      setIsLoading(false);
+    } else if (
+      trackId === lastVisitedTrackId() &&
+      localStorage.getItem("lastTrackState") &&
+      lastVisitedOwnedByUser()
+    ) {
+      loadStateFromLocalStorage();
     } else {
-      setLastVisitedTrackId(params.id);
-      loadStateFromServer(params.id);
+      setLastVisitedTrackId(trackId);
+      loadStateFromServer(trackId);
     }
-  } else {
+  };
+
+  const loadBlankEditor = () => {
+    const lastVisited = lastVisitedTrackId();
     if (lastVisited) {
-      navigate(`/track/${lastVisited}`, { replace: true, resolve: false });
-      setLastVisitedTrackId(null);
-      loadStateFromServer(lastVisited);
+      navigate(`/track/${lastVisited}`, { replace: true });
     } else {
       loadStateFromLocalStorage();
     }
-  }
+  };
+
+  createEffect(() => {
+    if (params.id) {
+      loadTrack(params.id);
+    } else {
+      loadBlankEditor();
+    }
+  });
 
   return (
     <Show
@@ -359,7 +399,7 @@ export const Workspace: Component = () => {
           saveStateToLocalStorage={saveStateToLocalStorage}
           toggleToolbarOpen={toggleToolbarOpen}
           handleSave={handleSave}
-          handleDelete={handleDelete}
+          handleDeleteTrack={handleDeleteTrack}
           userOwnsTrack={userOwnsTrack()}
           failureMessage={failureMessage()}
           isSaving={isSaving()}

@@ -15,7 +15,7 @@ type ToolbarProps = {
   saveStateToLocalStorage: () => void;
   toggleToolbarOpen: (event: MouseEvent) => void;
   handleSave: (event: SubmitEvent) => void;
-  handleDelete: () => void;
+  handleDeleteTrack: () => void;
   userOwnsTrack: boolean;
   failureMessage: string;
   isSaving: boolean;
@@ -26,6 +26,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const navigate = useNavigate();
   const {
     userId: [userId, _setUserId],
+    unsavedChangesSignal: [unsavedChangesSignal, _setUnsavedChangesSignal],
   } = useUserContext();
   const {
     editor: [editor, _setEditor],
@@ -81,7 +82,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           onClick={props.toggleToolbarOpen}
           class={`tab ${selectedTab() === 2 ? "selected" : ""}`}
         >
-          Settings
+          File
         </button>
         <button
           onClick={props.toggleToolbarOpen}
@@ -152,14 +153,14 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               </p>
             )}
             <div class="buttons">
-              {userId() && initialState?.length && (
+              {userId() && initialState?.length && unsavedChangesSignal() && (
                 <button type="submit" class="button">
                   Save{!props.userOwnsTrack ? " as" : ""}
                 </button>
               )}
               {props.userOwnsTrack && (
-                <button type="button" class="button" onClick={props.handleDelete}>
-                  Delete Track
+                <button type="button" class="button" onClick={props.handleDeleteTrack}>
+                  Delete track
                 </button>
               )}
               <button
@@ -170,7 +171,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   window.location.replace("/track/new");
                 }}
               >
-                New
+                Start new track
               </button>
               {props.failureMessage && (
                 <p class={`failure-message ${props.saveWasSuccessful ? "success-message" : ""}`}>

@@ -29,9 +29,23 @@
     align-self: flex-start;
   }
 
+  .track-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    @include tablet {
+      flex-direction: row;
+      justify-content: flex-end;
+      width: 100%;
+    }
+  }
+
   .button {
     @include button;
-    align-self: flex-end;
+    width: 100%;
+    @include tablet {
+      width: fit-content;
+    }
   }
 
   .about-link {

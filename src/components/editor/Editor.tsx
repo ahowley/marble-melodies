@@ -30,6 +30,9 @@ export const Editor: Component<EditorProps> = (props) => {
     if (playing()) {
       editor()?.pause(editor() as WorkspaceEditor);
     } else {
+      if (!editor()?.music) {
+        return setTimeout(togglePlay, 200);
+      }
       editor()?.play(editor() as WorkspaceEditor);
       setStopped(false);
       props.saveStateToLocalStorage();
@@ -116,13 +119,19 @@ export const Editor: Component<EditorProps> = (props) => {
       }
     });
 
-    const draggingBodies = editor()?.draggingBodies;
-    if (event.target instanceof HTMLCanvasElement && draggingBodies?.length) {
-      draggingBodies.forEach(
-        (draggingBody) => (draggingBody.initialState = draggingBody.serialize()),
-      );
-      editor()?.initialize();
-      props.saveStateToLocalStorage();
+    if (event.target instanceof HTMLCanvasElement) {
+      const draggingBodies = editor()?.draggingBodies;
+      if (draggingBodies?.length) {
+        draggingBodies.forEach(
+          (draggingBody) => (draggingBody.initialState = draggingBody.serialize()),
+        );
+        editor()?.initialize();
+        props.saveStateToLocalStorage();
+      }
+
+      if (editor()?.transformer.nodes().length) {
+        props.saveStateToLocalStorage();
+      }
     }
   };
 
@@ -201,6 +210,13 @@ export const Editor: Component<EditorProps> = (props) => {
           </li>
           <li class="list-item">
             Double-click to <strong>return to the starting position of the stage</strong>.
+          </li>
+          <li class="list-item">
+            Select a single marble and check the "Edit Marble" tab for additional playback options.
+          </li>
+          <li class="list-item">
+            Select a single note block and check the "Synth" tab for additional note options, like
+            pitch and volume per-note.
           </li>
         </ul>
       </details>

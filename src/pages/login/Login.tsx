@@ -1,6 +1,7 @@
 import { createSignal, type Component } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { useUserContext } from "../../components/user_context/UserContext";
+import { Shape } from "../../components/draggable/Shape";
 import "./Login.scss";
 
 export const Login: Component = () => {
@@ -55,7 +56,7 @@ export const Login: Component = () => {
 
   return (
     <form class={`login ${submitting() ? "submitting" : ""}`} onSubmit={handleSubmit}>
-      <div class="marble" />
+      <Shape type="marble" />
       <div class="fields">
         <h2 class="heading">Log In</h2>
         <p class="description">
