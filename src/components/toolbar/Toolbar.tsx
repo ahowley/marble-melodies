@@ -131,56 +131,59 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             </label>
           </form>
         )}
-        {selectedTab() === 2 && (
-          <form class="checkboxes" action="" onSubmit={props.handleSave}>
-            <label class="label">
-              <input
-                type="checkbox"
-                name="previewOnPlayback"
-                checked={settings.previewOnPlayback}
-                onClick={(event) => changeSetting("previewOnPlayback", event.currentTarget.checked)}
-              />
-              Preview during playback
+        <form
+          class={`checkboxes ${selectedTab() !== 2 ? "hidden" : ""}`}
+          action=""
+          id="track-details"
+          onSubmit={props.handleSave}
+        >
+          <label class="label">
+            <input
+              type="checkbox"
+              name="previewOnPlayback"
+              checked={settings.previewOnPlayback}
+              onClick={(event) => changeSetting("previewOnPlayback", event.currentTarget.checked)}
+            />
+            Preview during playback
+          </label>
+          {userId() ? (
+            <label class="text-label">
+              Name
+              <input type="text" class="input" name="trackname" value={props.trackName || ""} />
             </label>
-            {userId() ? (
-              <label class="text-label">
-                Name
-                <input type="text" class="input" name="trackname" value={props.trackName || ""} />
-              </label>
-            ) : (
-              <p class="login-prompt">
-                <A href="/login">Log in</A> to name & save your track!
+          ) : (
+            <p class="login-prompt">
+              <A href="/login">Log in</A> to name & save your track!
+            </p>
+          )}
+          <div class="buttons">
+            {userId() && initialState?.length && unsavedChangesSignal() && (
+              <button type="submit" class="button">
+                Save{!props.userOwnsTrack ? " as" : ""}
+              </button>
+            )}
+            {props.userOwnsTrack && (
+              <button type="button" class="button" onClick={props.handleDeleteTrack}>
+                Delete track
+              </button>
+            )}
+            <button
+              type="button"
+              class="button"
+              onClick={() => {
+                navigate("/track/new");
+                window.location.replace("/track/new");
+              }}
+            >
+              Start new track
+            </button>
+            {props.failureMessage && (
+              <p class={`failure-message ${props.saveWasSuccessful ? "success-message" : ""}`}>
+                {props.failureMessage}
               </p>
             )}
-            <div class="buttons">
-              {userId() && initialState?.length && unsavedChangesSignal() && (
-                <button type="submit" class="button">
-                  Save{!props.userOwnsTrack ? " as" : ""}
-                </button>
-              )}
-              {props.userOwnsTrack && (
-                <button type="button" class="button" onClick={props.handleDeleteTrack}>
-                  Delete track
-                </button>
-              )}
-              <button
-                type="button"
-                class="button"
-                onClick={() => {
-                  navigate("/track/new");
-                  window.location.replace("/track/new");
-                }}
-              >
-                Start new track
-              </button>
-              {props.failureMessage && (
-                <p class={`failure-message ${props.saveWasSuccessful ? "success-message" : ""}`}>
-                  {props.failureMessage}
-                </p>
-              )}
-            </div>
-          </form>
-        )}
+          </div>
+        </form>
         <MarbleSynth
           saveStateToLocalStorage={props.saveStateToLocalStorage}
           showing={selectedTab() === 3}

@@ -179,16 +179,28 @@ export const Workspace: Component = () => {
     setIsLoading(false);
   };
 
-  const handleSave = async (event: SubmitEvent) => {
-    event.preventDefault();
+  const handleSave = async (event: SubmitEvent | null = null) => {
+    event && event.preventDefault();
 
-    const trackNameField = event.currentTarget as HTMLFormElement;
+    if (!userId()) {
+      setSelectedTab(2);
+      setOpenState("open");
+      return;
+    }
+
+    if (!unsavedChangesStored()) return;
+
+    const trackNameField = event
+      ? (event.currentTarget as HTMLFormElement)
+      : (document.querySelector("#track-details") as HTMLFormElement);
     const name = trackNameField.trackname.value as string;
     const initialState = editor()?.initialState;
     const previewOnPlayback = editor()?.previewOnPlayback ?? false;
     const volume = marbleSynth()?.volume || 0.5;
 
     if (!name) {
+      setSelectedTab(2);
+      setOpenState("open");
       return setFailureMessage("Please name your track before saving!");
     }
 
@@ -393,7 +405,11 @@ export const Workspace: Component = () => {
     >
       <DragDropProvider onDragMove={onDragMove} onDragEnd={onDragEnd}>
         <DragDropSensors />
-        <Editor saveStateToLocalStorage={saveStateToLocalStorage} closeToolbar={closeToolbar} />
+        <Editor
+          saveStateToLocalStorage={saveStateToLocalStorage}
+          handleSave={handleSave}
+          closeToolbar={closeToolbar}
+        />
         <Toolbar
           ref={details!}
           saveStateToLocalStorage={saveStateToLocalStorage}

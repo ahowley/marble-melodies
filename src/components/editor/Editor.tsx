@@ -8,6 +8,7 @@ import "./Editor.scss";
 
 type EditorProps = {
   saveStateToLocalStorage: () => void;
+  handleSave: () => void;
   closeToolbar: () => void;
 };
 export const Editor: Component<EditorProps> = (props) => {
@@ -135,6 +136,14 @@ export const Editor: Component<EditorProps> = (props) => {
     }
   };
 
+  const keyDownListener = (event: KeyboardEvent) => {
+    if (event.ctrlKey) {
+      if (event.key === "s") {
+        event.preventDefault();
+      }
+    }
+  };
+
   const keyUpListener = (event: KeyboardEvent) => {
     if (event.key === "Backspace" || event.key === "Delete") {
       handleDelete();
@@ -145,6 +154,23 @@ export const Editor: Component<EditorProps> = (props) => {
     if (event.key === "Escape") {
       handleStop();
     }
+    if (event.ctrlKey) {
+      if (event.key === "s") {
+        props.handleSave();
+      }
+      if (event.key === "c") {
+        console.log("copying");
+      }
+      if (event.key === "v") {
+        console.log("pasting");
+      }
+      if (event.key === "z") {
+        console.log("undoing");
+      }
+      if (event.key === "y") {
+        console.log("redoing");
+      }
+    }
   };
 
   onMount(() => {
@@ -153,6 +179,7 @@ export const Editor: Component<EditorProps> = (props) => {
     addEventListener("pointerdown", pointerDownListener);
     addEventListener("pointermove", pointerMoveListener);
     addEventListener("pointerup", pointerUpListener);
+    document.addEventListener("keydown", keyDownListener);
     document.addEventListener("keyup", keyUpListener);
 
     onCleanup(() => {
@@ -160,6 +187,7 @@ export const Editor: Component<EditorProps> = (props) => {
       removeEventListener("pointerdown", pointerDownListener);
       removeEventListener("pointermove", pointerMoveListener);
       removeEventListener("pointerup", pointerUpListener);
+      document.removeEventListener("keydown", keyDownListener);
       document.removeEventListener("keyup", keyUpListener);
       editor()?.destroy();
       setEditor(null);
