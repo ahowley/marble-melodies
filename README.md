@@ -48,8 +48,8 @@ I haven't had time to implement a tutorial yet, so here's some notes worth menti
 - Double-click to return to the origin of the stage
 - Mousewheel or trackpad pinch to zoom in/out
 - Spacebar and Enter to play/pause, esc to stop
-- Delete or backspace to delete your currently selected blocks
-- Undo isn't currently implemented, I'm sorry in advance... I'm working on it
+- ctrl+c to copy current selection, ctrl+v to paste
+- Delete or backspace (or the delete button on mobile) to delete your currently selected blocks
 - All tracks are public, but if you're logged in and viewing your own track, you'll have the option to save over it or
   delete it. If you're viewing someone elses, you can "save as" to make your own copy
 
