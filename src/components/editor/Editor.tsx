@@ -178,12 +178,19 @@ export const Editor: Component<EditorProps> = (props) => {
         }
       }
       if (event.key === "v") {
-        const newState = editor()?.initialState as SerializedBody[];
+        const workspace = editor();
+        if (!workspace) return;
+
+        const newState = workspace.initialState as SerializedBody[];
         if (newState?.length) {
           newState.push(...copiedBodies);
-          copiedBodies = [];
 
-          editor()?.initialize(newState);
+          workspace.initialize(newState);
+          const newBodies = workspace.bodies.slice(-copiedBodies.length);
+          workspace.transformer.nodes(newBodies);
+          copiedBodies = [];
+          props.saveStateToLocalStorage();
+          props.triggerUnsavedChanges();
         }
       }
       if (event.key === "z") {
