@@ -178,7 +178,13 @@ export const Editor: Component<EditorProps> = (props) => {
         }
       }
       if (event.key === "v") {
-        console.log("pasting");
+        const newState = editor()?.initialState as SerializedBody[];
+        if (newState?.length) {
+          newState.push(...copiedBodies);
+          copiedBodies = [];
+
+          editor()?.initialize(newState);
+        }
       }
       if (event.key === "z") {
         console.log("undoing");
